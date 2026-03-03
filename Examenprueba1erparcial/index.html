@@ -1,1 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Test de Logaritmos</title>
 
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async 
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body {
+    background-color: #ccffcc;
+    font-size: 18px;
+}
+
+#quiz-container {
+    width: 80%;
+    max-width: 700px;
+    margin: auto;
+    text-align: center;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.question-container, .option-container {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    margin: 10px 0;
+    padding: 16px;
+    border-radius: 5px;
+}
+
+#options li {
+    list-style: none;
+    margin: 5px 0;
+    padding: 15px;
+    background-color: #e9ffe9;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#options li:hover {
+    background-color: #d0ffd0;
+}
+
+button {
+    margin-top: 20px;
+    padding: 12px 18px;
+    font-size: 18px;
+    cursor: pointer;
+    display: none;
+}
+
+.correct {
+    color: green;
+    font-weight: bold;
+}
+
+.incorrect {
+    color: red;
+    font-weight: bold;
+}
+
+#contadorIntentos {
+    text-align:center;
+    margin-top:15px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="quiz-container">
+    <div id="question-number"></div>
+    <div class="question-container" id="question"></div>
+    <div id="question-image"></div>
+    <ul id="options"></ul>
+    <button id="previous-question" onclick="loadPreviousQuestion()">Pregunta anterior</button>
+    <button id="next-question" onclick="loadNextQuestion()">Siguiente pregunta</button>
+    <button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+<div id="contadorIntentos"></div>
+
+<script>
+
+/* 🔥 PEGA AQUÍ TU URL DE APPS SCRIPT */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzm5WitAmdod9Okkp-3AdtZLndER1UD5i4W6UjuXq4383rQgh5ufpMStC9IROCPXDoe/exec";
+
+/* 🔥 CONTADOR LOCAL VISUAL */
+let contadorLocal = localStorage.getItem("intentos") || 0;
+document.getElementById("contadorIntentos").innerHTML =
+    "Este cuestionario ha sido respondido " + contadorLocal + " veces.";
+
+/* 🔥 FUNCIÓN PARA ENVIAR A GOOGLE SHEETS */
+function enviarResultados(score, total) {
+    fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            score: score,
+            total: total
+        })
+    })
+    .then(res => res.json())
+    .then(data => console.log("Guardado en Sheets"))
+    .catch(err => console.error("Error:", err));
+}
+
+/* 🔥 PREGUNTAS */
+const allQuestions = [
+        {
+            pregunta: "Convierte de forma exponencial a forma logarítmica: \\(17^2=a\\)",
+            imagen: "",
+            opciones: [
+                "\\(\\log_2{(a)}=17\\)",
+                "\\(\\log_{17}{(a)}=2\\)"
+            ],
+            respuestaCorrecta: "\\(\\log_{17}{(a)}=2\\)",
+            formula: "N/A",
+            // Aquí incluimos el iframe en la explicación usando un template literal
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=420&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1193947786102107%2F&show_text=false&width=560&t=0" width="560" height="420" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+            
+        },
+        {
+            pregunta: "Convierte de forma logarítmica a exponencial \\(\\log_{3}{(243)}=5\\)",
+            imagen: "",
+            opciones: [
+                "\\(243=3^5\\)",
+                "\\(243=5^3\\)"
+            ],
+            respuestaCorrecta: "\\(243=3^5\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1971142780371178%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Emplea la definición de logarítmo y encuentra el valor de la incógnita:\\(\\log_{b}{(4)}=\\frac{1}{2}\\) ",
+            imagen: "",
+            opciones: [
+                "b=2",
+                "b=16",
+                "b=4"
+            ],
+            respuestaCorrecta: "b=16",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1326051275607679%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Resuelve la siguiente ecuación:  \\(\\log{(x-5)}+\\log{(3)}=\\log{(2x)}\\)",
+            imagen: "",
+            opciones: [
+                "\\(x=15\\)",
+                "\\(x=10\\) ",
+                "\\(x=5\\) "
+            ],
+            respuestaCorrecta: "\\(x=15\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F2615874608761363%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Resuelve la siguiente ecuación:  \\(5^{x+1}=25\\)",
+            opciones: [
+                "\\(X=1\\)",
+                "\\(X=10\\)",
+                "\\(X=5\\)"
+            ],
+            respuestaCorrecta: "\\(X=1\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1494610551567887%2F&width=300&show_text=false&appId=703667608468790&height=400" width="300" height="400" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Resuelve la ecuación:\\(5^{2t+1}=3^{4t-1}\\)",
+            opciones: [
+                "\\(x=2.3036\\)",
+                "\\(x=2\\)",
+                "\\(x=1.3036\\)",
+                "\\(x=2.5525\\)"
+            ],
+            respuestaCorrecta: "\\(x=2.3036\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F744621474946542%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+            `
+        },
+        {
+            pregunta: "Resuelve el siguiente problema:",
+            imagen: "https://i.imgur.com/06y9PMe.png",
+            opciones: [
+                "Se necesitan 3 horas ",
+                "Se necesitan 5 horas",
+                "Se necesitan 4 horas"
+
+            ],
+            respuestaCorrecta:  "Se necesitan 5 horas",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1294352778742132%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+            `
+        },
+        {
+            pregunta: "¿Resuelve el siguiente problema:",
+            imagen: "https://i.imgur.com/HzUDUBD.png",
+            opciones: [
+                "Existirán aprox. 33115 bacterias",
+                "Existirán aprox. 33120 bacterias",
+                "Existirán aprox. 3315 bacterias"
+            ],
+            respuestaCorrecta: "Existirán aprox. 33115 bacterias",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1826064284788909%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+            `
+        },
+        {
+            pregunta: "¿La siguiente gráfica corresponde a una función exponencial o logarítmica?",
+            imagen: "https://i.imgur.com/bN2eLZ1.png",
+            opciones: [
+                "Exponencial",
+                "Logarítmica",
+                "Lineal"
+            ],
+            respuestaCorrecta: "Exponencial",
+            formula: "N/A",
+            explicacion: "Dado que la grafica crece hacia el eje de las 'x' es exponencial. Y su dominio sería \\((-\\infty,\\infty)\\)"
+        },
+        {
+            pregunta: "Determina el dominio y rango de la función: \\(y=\\log_{2}{(x+1)}-1\\)",
+            imagen: "",
+            opciones: [
+                "\\(D_f\\): \\(x\\in(-1,\\infty)\\) <br> \\(R_f\\): \\(y\\in(-\\infty,\\infty)\\)",
+                "\\(D_f\\): \\(x\\in(1,\\infty)\\) <br> \\(R_f\\): \\(y\\in(-\\infty,\\infty)\\)",
+                "\\(D_f\\): \\(x\\in(-\\infty,\\infty)\\) <br> \\(R_f\\): \\(y\\in(-1,\\infty)\\) "
+            ],
+            respuestaCorrecta: "\\(D_f\\): \\(x\\in(-1,\\infty)\\) <br> \\(R_f\\): \\(y\\in(-\\infty,\\infty)\\)",
+            formula: "N/A",
+            explicacion: `
+    <p>Si quieres ver la explicación, aquí está:</p>
+
+    <div style="display:flex; justify-content:center;">
+        <iframe 
+            src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid02KZfU2rd92WbfYnFV4cByX6ih4FdpS5YdeW3mQBXSFK7W8RUGDhcUM3ymb5bdKKiPl%26id%3D100079792827912&show_text=true&width=500"
+            style="border:none; overflow:hidden; width:100%; max-width:500px; height:700px;"
+            scrolling="no"
+            frameborder="0"
+            allowfullscreen="true"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+`
+        },
+        {
+            pregunta: "Determina el dominio y rango de la función: \\(y=e^{2x+1}+1\\)",
+            imagen: "",
+            opciones: [
+                "\\(D_f\\): \\(x\\in(-\\infty,\\infty)\\)  <br> \\(R_f\\): \\(y\\in(1,\\infty)\\)",
+                "\\(D_f\\): \\(x\\in(1,\\infty)\\) <br> \\(R_f\\): \\(y\\in(-\\infty,\\infty)\\)",
+                "\\(D_f\\): \\(x\\in(-\\infty,\\infty)\\) <br> \\(R_f\\): \\(y\\in(-1,\\infty)\\) "
+            ],
+            respuestaCorrecta: "\\(D_f\\): \\(x\\in(-\\infty,\\infty)\\)  <br> \\(R_f\\): \\(y\\in(1,\\infty)\\)",
+            formula: "N/A",
+            explicacion: `
+    <p>Si quieres ver la explicación, aquí está:</p>
+
+    <div style="display:flex; justify-content:center;">
+        <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid025XcScAq4xgUysp67j8rXoTNGFRijmDADX7WcFuyRKKufB4uDnov37v4XtCkfPvB9l%26id%3D100079792827912&width=1000&show_text=true&appId=703667608468790&height=608" width="1000" height="608" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+    </div>
+`
+        },
+        
+        
+    ];
+
+/* 🔥 MEZCLAR */
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+shuffle(allQuestions);
+const questions = allQuestions.slice(0, 6);
+questions.forEach(q => shuffle(q.opciones));
+
+let currentQuestionIndex = 0;
+let score = 0;
+
+function loadQuestion(index) {
+
+    const question = questions[index];
+
+    document.getElementById('question-number').innerHTML =
+        `Pregunta ${index + 1} de ${questions.length}`;
+
+    document.getElementById('question').innerHTML = question.pregunta;
+
+    const questionImageDiv = document.getElementById('question-image');
+    questionImageDiv.innerHTML = "";
+
+    if (question.imagen) {
+        const img = document.createElement('img');
+        img.src = question.imagen;
+        img.style.maxWidth = "100%";
+        questionImageDiv.appendChild(img);
+    }
+
+    const optionsContainer = document.getElementById('options');
+    optionsContainer.innerHTML = "";
+
+    question.opciones.forEach(option => {
+        const li = document.createElement('li');
+        li.innerHTML = option;
+        li.onclick = function() {
+            clearSelections();
+            this.style.backgroundColor = "#66cc66";
+            question.selectedAnswer = option;
+        };
+        optionsContainer.appendChild(li);
+    });
+
+    document.getElementById('previous-question').style.display =
+        index > 0 ? 'block' : 'none';
+
+    document.getElementById('next-question').style.display =
+        index < questions.length - 1 ? 'block' : 'none';
+
+    document.getElementById('finish-test').style.display =
+        index === questions.length - 1 ? 'block' : 'none';
+
+    MathJax.typesetPromise();
+}
+
+function clearSelections() {
+    document.querySelectorAll('#options li').forEach(option => {
+        option.style.backgroundColor = '#e9ffe9';
+    });
+}
+
+function loadNextQuestion() {
+    if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        loadQuestion(currentQuestionIndex);
+    }
+}
+
+function loadPreviousQuestion() {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion(currentQuestionIndex);
+    }
+}
+
+function finishTest() {
+
+    score = 0;
+    questions.forEach(q => {
+        if (q.selectedAnswer === q.respuestaCorrecta) score++;
+    });
+
+    /* 🔥 INCREMENTAR CONTADOR LOCAL */
+    contadorLocal++;
+    localStorage.setItem("intentos", contadorLocal);
+    document.getElementById("contadorIntentos").innerHTML =
+        "Este cuestionario ha sido respondido " + contadorLocal + " veces.";
+
+    /* 🔥 ENVIAR A SHEETS */
+    enviarResultados(score, questions.length);
+
+    showResults();
+    document.getElementById('quiz-container').style.display = "none";
+}
+
+function showResults() {
+
+    let html = `
+        <h2>Resultado Final</h2>
+        <p>Tu puntuación es ${score} de ${questions.length}</p>
+        <hr>
+    `;
+
+    questions.forEach(q => {
+
+        let icon = q.selectedAnswer === q.respuestaCorrecta ? "✔" : "✘";
+        let clase = q.selectedAnswer === q.respuestaCorrecta ? "correct" : "incorrect";
+
+        html += `
+        <div class="option-container">
+            <strong>Pregunta:</strong> ${q.pregunta}<br><br>
+            <strong>Tu respuesta:</strong>
+            <span class="${clase}">
+                ${icon} ${q.selectedAnswer || "No respondida"}
+            </span><br><br>
+            <strong>Respuesta correcta:</strong>
+            ${q.respuestaCorrecta}<br><br>
+            <strong>Explicación:</strong>
+            ${q.explicacion}
+        </div><br>
+        `;
+    });
+
+    document.getElementById('result').innerHTML = html;
+    MathJax.typesetPromise();
+}
+
+loadQuestion(currentQuestionIndex);
+
+</script>
+
+</body>
+</html>
