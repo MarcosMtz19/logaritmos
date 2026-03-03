@@ -1,85 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Test Logaritmos y Exponenciales</title>
+    <meta charset="UTF-8">
+    <title>Test de Derivadas de Clasificación de funciones</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            background-color: #ccffcc; /* Verde claro */
+            font-size: 18px; /* Aumenta el tamaño de la letra en todo el cuerpo */
+        }
+        #quiz-container {
+            width: 80%;
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            background-color: #ffffff; /* Fondo blanco */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Sombra suave */
+            font-size: 20px; /* Aumenta el tamaño de la letra en el contenedor del cuestionario */
+        }
 
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script id="MathJax-script" async
-src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+        .question-container, .option-container {
+            background-color: #f0f0f0; /* Fondo gris claro */
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 16px;
+            border-radius: 5px;
+            font-size: 20px; /* Aumenta el tamaño de la letra en las preguntas y opciones */
+        }
 
-<style>
-body{
-    background:#ccffcc;
-    font-size:18px;
-}
-#quiz-container{
-    width:80%;
-    max-width:600px;
-    margin:auto;
-    text-align:center;
-    background:#fff;
-    padding:20px;
-    border-radius:8px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-    display:none;
-}
-.question-container,.option-container{
-    background:#f0f0f0;
-    border:1px solid #ddd;
-    margin:10px 0;
-    padding:16px;
-    border-radius:5px;
-}
-#options li{
-    list-style:none;
-    margin:5px 0;
-    padding:15px;
-    background:#e9ffe9;
-    cursor:pointer;
-    border-radius:5px;
-}
-#options li:hover{
-    background:#d0ffd0;
-}
-button{
-    margin-top:15px;
-    padding:10px 20px;
-    font-size:16px;
-}
-#question-number{
-    font-size:20px;
-    margin-bottom:10px;
-}
-</style>
+        #options li {
+            list-style: none;
+            margin: 5px 0;
+            padding: 15px;
+            background-color: #e9ffe9; /* Verde muy claro */
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 18px; /* Aumenta el tamaño de la letra en las opciones */
+        }
+
+        #options li:hover {
+            background-color: #d0ffd0; /* Verde más fuerte al seleccionar */
+        }
+
+        #next-question, #previous-question, #finish-test {
+            margin-top: 20px;
+            padding: 14px 20px;
+            font-size: 20px; /* Aumenta el tamaño de la letra en los botones */
+            cursor: pointer;
+            display: none;
+        }
+
+        #question-number {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="start-container" style="text-align:center;margin-top:50px;">
-<h2>Ingresa tu nombre o alias</h2>
-<input type="text" id="student-name" placeholder="Escribe tu nombre" style="padding:10px;font-size:18px;">
-<br><br>
-<button onclick="startQuiz()">Comenzar Test</button>
-</div>
-
 <div id="quiz-container">
-<div id="question-number"></div>
-<div class="question-container" id="question"></div>
-<div id="question-image"></div>
-<ul id="options"></ul>
-<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
-<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+    <div id="question-number"></div>
+    <div class="question-container" id="question"></div>
+    <div id="question-image"></div>
+    <ul id="options"></ul>
+    <button id="previous-question" onclick="loadPreviousQuestion()">Pregunta anterior</button>
+    <button id="next-question" onclick="loadNextQuestion()">Siguiente pregunta</button>
+    <button id="finish-test" onclick="finishTest()" style="display:none;">Terminar Test</button>
 </div>
 
 <div id="result"></div>
+<div id="selected-answers"></div>
 
 <script>
-
-let studentName="";
-let currentQuestionIndex=0;
-let score=0;
-
     const allQuestions = [
         {
             pregunta: "Convierte de forma exponencial a forma logarítmica: \\(17^2=a\\)",
@@ -133,201 +128,210 @@ let score=0;
             `
         },
         {
-            pregunta: "Convierte de forma exponencial a forma logarítmica: \\(5^{3}=125\\)",
+            pregunta: "Resuelve la siguiente ecuación:  \\(\\log{(x-5)}+\\log{(3)}=\\log{(2x)}\\)",
             imagen: "",
             opciones: [
-                "\\(\\log_{5}{125}=3\\)",
-                "\\(\\log_{3}{125}=3\\)",
-                "\\(\\log_{125}{3}=5\\)"
+                "\\(x=15\\)",
+                "\\(x=10\\) ",
+                "\\(x=5\\) "
             ],
-            respuestaCorrecta: "\\(\\log_{5}{125}=3\\)",
+            respuestaCorrecta: "\\(x=15\\)",
             formula: "N/A",
             explicacion: `
                 <p>Si quieres ver la explicación en video, aquí está:</p>
                 <div style="display:flex;justify-content:center;">
-                <iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F928466632903532%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
-            `
-        },
-        {
-            pregunta: "Convierte de forma logaritmica a forma exponencial \\(\\log_{3}{81}=4\\)",
-            opciones: [
-                "\\(81=3^{4}\\)",
-                "\\(81=4^{3}\\)"
-            ],
-            respuestaCorrecta: "\\(81=3^{4}\\)",
-            formula: "N/A",
-            explicacion: `
-                <p>Si quieres ver la explicación en video, aquí está:</p>
-                <div style="display:flex;justify-content:center;">
-               <iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1325614459780161%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F2615874608761363%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
                 </div>
             `
         },
         {
-            pregunta: "Determina si esta correcta la conversión de forma logarítmica a exponencial:",
-            imagen: "https://i.imgur.com/tJWsFGJ.png",
+            pregunta: "Resuelve la siguiente ecuación:  \\(5^{x+1}=25\\)",
             opciones: [
-                "Si, es correcto",
-                "No, no es correcto"
+                "\\(X=1\\)",
+                "\\(X=10\\)",
+                "\\(X=5\\)"
             ],
-            respuestaCorrecta: "Si, es correcto",
+            respuestaCorrecta: "\\(X=1\\)",
             formula: "N/A",
             explicacion: `
                 <p>Si quieres ver la explicación en video, aquí está:</p>
                 <div style="display:flex;justify-content:center;">
-                <iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1254407606172625%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
-                   </div>
+                <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1494610551567887%2F&width=300&show_text=false&appId=703667608468790&height=400" width="300" height="400" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
             `
         },
         {
-            pregunta: "Determina el valor de 'x' de la expresioón: \\(\\log_{16}{(x)}=\\frac{1}{2}\\)",
+            pregunta: "Resuelve la ecuación:\\(5^{2t+1}=3^{4t-1}\\)",
             opciones: [
-                "x=4",
-                "\\((\\frac{1}{2})^{16}\\)",
-                "x=16"
-
+                "\\(x=2.3036\\)",
+                "\\(x=2\\)",
+                "\\(x=1.3036\\)",
+                "\\(x=2.5525\\)"
             ],
-            respuestaCorrecta:  "x=4",
+            respuestaCorrecta: "\\(x=2.3036\\)",
             formula: "N/A",
             explicacion: `
                 <p>Si quieres ver la explicación en video, aquí está:</p>
                 <div style="display:flex;justify-content:center;">
-                <iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1460882822138961%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F744621474946542%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+            `
+        },
+        {
+            pregunta: "Resuelve el siguiente problema:",
+            imagen: "https://i.imgur.com/06y9PMe.png",
+            opciones: [
+                "Se necesitan 3 horas ",
+                "Se necesitan 5 horas",
+                "Se necesitan 4 horas"
+
+            ],
+            respuestaCorrecta:  "Se necesitan 5 horas",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1294352778742132%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+            `
+        },
+        {
+            pregunta: "¿Resuelve el siguiente problema:",
+            imagen: "https://i.imgur.com/HzUDUBD.png",
+            opciones: [
+                "Existirán aprox. 33115 bacterias",
+                "Existirán aprox. 33120 bacterias",
+                "Existirán aprox. 3315 bacterias"
+            ],
+            respuestaCorrecta: "Existirán aprox. 33115 bacterias",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1826064284788909%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
             `
         },
     ];
 
+    const questions = getRandomQuestions(5);
+    let currentQuestionIndex = 0;
+    let score = 0;
 
+    function getRandomQuestions(numQuestions) {
+        const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, numQuestions);
+    }
 
-// 🔥 ALEATORIO DE PREGUNTAS
-const questions=[...allQuestions]
-.sort(()=>0.5-Math.random())
-.slice(0,3);
+    function shuffleOptions(questions) {
+        questions.forEach(question => {
+            const correctAnswer = question.respuestaCorrecta;
+            question.opciones = question.opciones.sort(() => Math.random() - 0.5);
+            question.respuestaCorrectaIndex = question.opciones.indexOf(correctAnswer);
+        });
+    }
 
-// 🔥 ALEATORIO DE OPCIONES
-questions.forEach(q=>{
-q.selectedAnswer=null;
-q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
-});
+    shuffleOptions(allQuestions);
 
-function startQuiz(){
-const name=document.getElementById("student-name").value.trim();
-if(name===""){alert("Escribe tu nombre");return;}
-studentName=name;
-document.getElementById("start-container").style.display="none";
-document.getElementById("quiz-container").style.display="block";
-loadQuestion(currentQuestionIndex);
-}
+    function loadQuestion(questionIndex) {
+        const question = questions[questionIndex];
+        const questionDiv = document.getElementById('question');
+        const questionImageDiv = document.getElementById('question-image');
 
-function loadQuestion(index){
+        questionDiv.innerHTML = question.pregunta;
+        questionImageDiv.innerHTML = ''; // Limpia cualquier imagen previa
 
-const question=questions[index];
-document.getElementById("question").innerHTML=question.pregunta;
-document.getElementById("question-image").innerHTML="";
+        if (question.imagen) {
+            const img = document.createElement('img');
+            img.src = question.imagen;
+            img.alt = "Imagen de la pregunta";
+            img.style.maxWidth = "100%";
+            img.style.height = "auto";
+            questionImageDiv.appendChild(img);
+        }
 
-if(question.imagen){
-const img=document.createElement("img");
-img.src=question.imagen;
-img.style.maxWidth="100%";
-document.getElementById("question-image").appendChild(img);
-}
+        document.getElementById('question-number').innerHTML = `Pregunta ${questionIndex + 1} de ${questions.length}`;
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
 
-document.getElementById("question-number").innerHTML=
-`Pregunta ${index+1} de ${questions.length}`;
+        question.opciones.forEach(function(option) {
+            const optionElement = document.createElement('li');
+            optionElement.className = 'option-container';
+            optionElement.innerHTML = option;
+            optionElement.onclick = function() {
+                clearSelections();
+                this.style.backgroundColor = '#66cc66'; // Seleccionado
+                checkAnswer(option);
+            };
+            optionsContainer.appendChild(optionElement);
+        });
 
-const optionsContainer=document.getElementById("options");
-optionsContainer.innerHTML="";
+        document.getElementById('next-question').style.display = questionIndex < questions.length - 1 ? 'block' : 'none';
+        document.getElementById('previous-question').style.display = questionIndex > 0 ? 'block' : 'none';
+        document.getElementById('finish-test').style.display = questionIndex === questions.length - 1 ? 'block' : 'none';
 
-question.opciones.forEach(option=>{
-const li=document.createElement("li");
-li.innerHTML=option;
+        MathJax.typesetPromise(); // Actualiza MathJax
+    }
 
-li.onclick=()=>{
-if(question.selectedAnswer!==null) return;
+    function clearSelections() {
+        document.querySelectorAll('#options li').forEach(function(option) {
+            option.style.backgroundColor = '#e9ffe9'; // Restablece el color original
+        });
+    }
 
-question.selectedAnswer=option;
-li.style.backgroundColor="#66cc66";
+    function checkAnswer(selectedOption) {
+        const question = questions[currentQuestionIndex];
+        if (selectedOption === question.respuestaCorrecta) {
+            score++;
+        }
+        question.selectedAnswer = selectedOption;
 
-document.getElementById("next-question").style.display=
-index<questions.length-1?"inline-block":"none";
+        if (currentQuestionIndex === questions.length - 1) {
+            document.getElementById('next-question').style.display = 'none';
+            document.getElementById('finish-test').style.display = 'block';
+        }
+    }
 
-document.getElementById("finish-test").style.display=
-index===questions.length-1?"inline-block":"none";
-};
+    function loadNextQuestion() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            loadQuestion(currentQuestionIndex);
+        }
+    }
 
-optionsContainer.appendChild(li);
-});
+    function loadPreviousQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuestion(currentQuestionIndex);
+        }
+    }
 
-document.getElementById("next-question").style.display="none";
-document.getElementById("finish-test").style.display="none";
+    function finishTest() {
+        showResults();
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('finish-test').style.display = 'none';
+    }
 
-MathJax.typesetPromise();
-}
+    function showResults() {
+        let resultsHtml = `<h2>Resultado</h2><p>Tu puntuación es ${score} de ${questions.length}.</p><div><h3>Respuestas Correctas, Fórmulas Usadas y Explicaciones:</h3>`;
+        questions.forEach(question => {
+            resultsHtml += `<div class="option-container"><strong>Pregunta:</strong> ${question.pregunta} <br> 
+            <strong>Respuesta correcta:</strong> ${question.respuestaCorrecta}<br>
+            <strong>Fórmula usada:</strong> ${question.formula}<br>
+            <strong>Explicación:</strong> ${question.explicacion}</div>`;
 
-function loadNextQuestion(){
-currentQuestionIndex++;
-loadQuestion(currentQuestionIndex);
-}
+            if (question.selectedAnswer) {
+                resultsHtml += `<div class="option-container"><strong>Respuesta seleccionada:</strong> ${question.selectedAnswer}</div>`;
+            }
+        });
+        resultsHtml += `</div>`;
+        document.getElementById('result').innerHTML = resultsHtml;
 
-function finishTest(){
+        // Añadir mensaje de contacto
+        document.getElementById('result').innerHTML += `<p>Si te gustaría reforzar tu conocimiento puedo asesorarte, envíame mensaje vía WhatsApp <a href="https://wa.me/5540972313" target="_blank">5540972313</a>.</p>`;
 
-score=0;
+        MathJax.typesetPromise();
+    }
 
-questions.forEach(q=>{
-if(q.selectedAnswer===q.respuestaCorrecta){
-score++;
-}
-});
-
-const total=questions.length;
-const errores=total-score;
-const porcentaje=((score/total)*100).toFixed(2);
-
-document.getElementById("quiz-container").style.display="none";
-
-let html=`<h2>Resultado</h2>
-<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
-<h3>Revisión:</h3>`;
-
-questions.forEach(q=>{
-
-let correcta=q.selectedAnswer===q.respuestaCorrecta;
-let fondo=correcta?"#d4edda":"#f8d7da";
-let borde=correcta?"#28a745":"#dc3545";
-let icono=correcta?"✔ Correcta":"✘ Incorrecta";
-
-html+=`
-<div style="
-background:${fondo};
-border:2px solid ${borde};
-margin:12px 0;
-padding:16px;
-border-radius:8px;
-">
-<strong>${icono}</strong><br><br>
-<strong>Pregunta:</strong> ${q.pregunta}<br>
-<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
-<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
-<strong>Explicación:</strong> ${q.explicacion}
-</div>
-`;
-});
-
-document.getElementById("result").innerHTML=html;
-MathJax.typesetPromise();
-
-fetch("https://script.google.com/macros/s/AKfycbzPp3P44PHky5aLSDJBPy4Pk63HVbOxRj1eDiXMZAA3mDtM8KEfTWTZie1GN8OVAt1c/exec",{
-method:"POST",
-body:JSON.stringify({
-nombre:studentName,
-aciertos:score,
-errores:errores,
-total:total,
-porcentaje:porcentaje
-})
-});
-}
-
+    // Carga la primera pregunta al iniciar
+    loadQuestion(currentQuestionIndex);
 </script>
 </body>
 </html>
