@@ -1,1 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Segunda Ley de Newton</title>
 
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+<h2>Ingresa tu nombre o alias</h2>
+<input type="text" id="student-name" placeholder="Escribe tu nombre" style="padding:10px;font-size:18px;">
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+
+const allQuestions = [
+{
+    pregunta: "Un objeto de masa \\(m=10\\,kg\\) experimenta una fuerza neta de \\(F=50\\,N\\). ¿Cuál es su aceleración?",
+    imagen: "",
+    opciones: [
+        "\\(a=5\\,m/s^2\\)",
+        "\\(a=0.2\\,m/s^2\\)",
+        "\\(a=500\\,m/s^2\\)"
+    ],
+    respuestaCorrecta: "\\(a=5\\,m/s^2\\)",
+    formula: "\\(F=ma \\Rightarrow a=\\frac{F}{m}\\)",
+    explicacion: "Se despeja la aceleración: a = 50/10 = 5 m/s²."
+},
+{
+    pregunta: "Un automóvil de \\(1200\\,kg\\) acelera a \\(3\\,m/s^2\\). ¿Qué fuerza neta actúa sobre él?",
+    imagen: "",
+    opciones: [
+        "\\(F=3600\\,N\\)",
+        "\\(F=400\\,N\\)",
+        "\\(F=1203\\,N\\)"
+    ],
+    respuestaCorrecta: "\\(F=3600\\,N\\)",
+    formula: "\\(F=ma\\)",
+    explicacion: "F = 1200 × 3 = 3600 N. Se aplica directamente la segunda ley de Newton."
+},
+{
+    pregunta: "Una fuerza de \\(F=120\\,N\\) produce una aceleración de \\(a=4\\,m/s^2\\). ¿Cuál es la masa del objeto?",
+    imagen: "",
+    opciones: [
+        "\\(m=30\\,kg\\)",
+        "\\(m=480\\,kg\\)",
+        "\\(m=0.03\\,kg\\)"
+    ],
+    respuestaCorrecta: "\\(m=30\\,kg\\)",
+    formula: "\\(F=ma \\Rightarrow m=\\frac{F}{a}\\)",
+    explicacion: "Se despeja la masa: m = 120/4 = 30 kg."
+},
+{
+    pregunta: "Sobre un bloque actúan dos fuerzas en la misma dirección: \\(F_1=80\\,N\\) y \\(F_2=40\\,N\\) en sentido contrario. Si la masa es \\(m=20\\,kg\\), ¿cuál es la aceleración resultante?",
+    imagen: "",
+    opciones: [
+        "\\(a=2\\,m/s^2\\)",
+        "\\(a=6\\,m/s^2\\)",
+        "\\(a=4\\,m/s^2\\)"
+    ],
+    respuestaCorrecta: "\\(a=2\\,m/s^2\\)",
+    formula: "\\(F_{neta}=F_1-F_2=ma\\)",
+    explicacion: "La fuerza neta es 80−40=40 N. Luego a = 40/20 = 2 m/s²."
+},
+{
+    pregunta: "Un cohete de \\(500\\,kg\\) sube con una aceleración de \\(15\\,m/s^2\\). Considerando \\(g=10\\,m/s^2\\), ¿qué fuerza de empuje ejerce el motor?",
+    imagen: "",
+    opciones: [
+        "\\(F=12500\\,N\\)",
+        "\\(F=7500\\,N\\)",
+        "\\(F=5000\\,N\\)"
+    ],
+    respuestaCorrecta: "\\(F=12500\\,N\\)",
+    formula: "\\(F_{empuje}-mg=ma \\Rightarrow F_{empuje}=m(g+a)\\)",
+    explicacion: "La fuerza neta debe vencer la gravedad y además acelerar el cohete: F = 500×(10+15) = 500×25 = 12500 N."
+},
+{
+    pregunta: "Un bloque de \\(m=8\\,kg\\) reposa sobre un plano inclinado a \\(30°\\). ¿Cuál es la componente de la fuerza gravitacional paralela al plano? (\\(g=10\\,m/s^2\\))",
+    imagen: "",
+    opciones: [
+        "\\(F_{\\parallel}=40\\,N\\)",
+        "\\(F_{\\parallel}=69.3\\,N\\)",
+        "\\(F_{\\parallel}=80\\,N\\)"
+    ],
+    respuestaCorrecta: "\\(F_{\\parallel}=40\\,N\\)",
+    formula: "\\(F_{\\parallel}=mg\\sin\\theta\\)",
+    explicacion: "F∥ = 8 × 10 × sin(30°) = 80 × 0.5 = 40 N. Esta componente es la que tiende a deslizar el bloque cuesta abajo."
+},
+{
+    pregunta: "Un objeto de \\(m=5\\,kg\\) se desliza sin fricción por un plano inclinado a \\(37°\\). ¿Cuál es su aceleración? (\\(g=10\\,m/s^2,\\, \\sin37°=0.6\\))",
+    imagen: "",
+    opciones: [
+        "\\(a=6\\,m/s^2\\)",
+        "\\(a=8\\,m/s^2\\)",
+        "\\(a=4\\,m/s^2\\)"
+    ],
+    respuestaCorrecta: "\\(a=6\\,m/s^2\\)",
+    formula: "\\(a=g\\sin\\theta\\)",
+    explicacion: "En un plano sin fricción la única fuerza neta es mg·sin θ. Aplicando F=ma: a = g·sin(37°) = 10 × 0.6 = 6 m/s². La masa se cancela."
+},
+{
+    pregunta: "Una fuerza de \\(F=100\\,N\\) se aplica a \\(53°\\) sobre la horizontal a un bloque de \\(m=10\\,kg\\) sobre una superficie plana sin fricción. ¿Cuál es la aceleración horizontal del bloque? (\\(\\cos53°=0.6\\))",
+    imagen: "",
+    opciones: [
+        "\\(a=6\\,m/s^2\\)",
+        "\\(a=8\\,m/s^2\\)",
+        "\\(a=10\\,m/s^2\\)"
+    ],
+    respuestaCorrecta: "\\(a=6\\,m/s^2\\)",
+    formula: "\\(F_x=F\\cos\\theta=ma\\)",
+    explicacion: "Solo la componente horizontal mueve el bloque: F_x = 100 × cos(53°) = 100 × 0.6 = 60 N. Luego a = 60/10 = 6 m/s²."
+}
+];
+
+
+// 🔥 ALEATORIO DE PREGUNTAS
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,3);
+
+// 🔥 ALEATORIO DE OPCIONES
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Fórmula:</strong> ${q.formula}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+fetch("https://script.google.com/macros/s/AKfycbx5zMbjXzJScGD6lxl0CkpLgvZRHZkXJ4-oDvD5vPEigFHqqRluUHFOw03aNFxypZ3g/exec",{
+method:"POST",
+body:JSON.stringify({
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje
+})
+});
+}
+
+</script>
+</body>
+</html>
