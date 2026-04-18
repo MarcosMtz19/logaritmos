@@ -1,1 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Trabajo y energía</title>
 
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+<h2>Ingresa tu nombre o alias</h2>
+<input type="text" id="student-name" placeholder="Escribe tu nombre" style="padding:10px;font-size:18px;">
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+
+const allQuestions = [
+{
+    pregunta: "Una fuerza de \\(F=50\\,N\\) se aplica horizontalmente a un objeto que se desplaza \\(d=8\\,m\\). ¿Cuánto trabajo realiza la fuerza?",
+    imagen: "",
+    opciones: [
+        "\\(W=400\\,J\\)",
+        "\\(W=58\\,J\\)",
+        "\\(W=6.25\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(W=400\\,J\\)",
+    formula: "\\(W=F \\cdot d\\)",
+    explicacion: "Cuando la fuerza y el desplazamiento son paralelos: W = 50 × 8 = 400 J."
+},
+{
+    pregunta: "Un objeto de \\(m=4\\,kg\\) se eleva verticalmente \\(h=5\\,m\\). ¿Cuánto trabajo realiza la gravedad sobre él? (\\(g=10\\,m/s^2\\))",
+    imagen: "",
+    opciones: [
+        "\\(W=-200\\,J\\)",
+        "\\(W=200\\,J\\)",
+        "\\(W=-40\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(W=-200\\,J\\)",
+    formula: "\\(W_g=-mgh\\)",
+    explicacion: "La gravedad actúa hacia abajo pero el desplazamiento es hacia arriba, por lo que el trabajo es negativo: W = −4 × 10 × 5 = −200 J."
+},
+{
+    pregunta: "Un objeto parte del reposo y alcanza una velocidad de \\(v=6\\,m/s\\) con masa \\(m=3\\,kg\\). ¿Cuál es su energía cinética final?",
+    imagen: "",
+    opciones: [
+        "\\(E_k=54\\,J\\)",
+        "\\(E_k=18\\,J\\)",
+        "\\(E_k=108\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(E_k=54\\,J\\)",
+    formula: "\\(E_k=\\frac{1}{2}mv^2\\)",
+    explicacion: "E_k = ½ × 3 × 6² = ½ × 3 × 36 = 54 J."
+},
+{
+    pregunta: "Una fuerza de \\(F=60\\,N\\) se aplica a \\(45°\\) sobre la horizontal. El objeto se desplaza \\(d=10\\,m\\). ¿Cuánto trabajo realiza la fuerza? (\\(\\cos45°=0.707\\))",
+    imagen: "",
+    opciones: [
+        "\\(W=424.2\\,J\\)",
+        "\\(W=600\\,J\\)",
+        "\\(W=212.1\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(W=424.2\\,J\\)",
+    formula: "\\(W=F \\cdot d \\cdot \\cos\\theta\\)",
+    explicacion: "Solo la componente horizontal realiza trabajo: W = 60 × 10 × cos(45°) = 600 × 0.707 ≈ 424.2 J."
+},
+{
+    pregunta: "Un bloque de \\(m=5\\,kg\\) se lanza con \\(v_0=4\\,m/s\\) y sube por un plano sin fricción. ¿Hasta qué altura máxima llega? (\\(g=10\\,m/s^2\\))",
+    imagen: "",
+    opciones: [
+        "\\(h=0.8\\,m\\)",
+        "\\(h=1.6\\,m\\)",
+        "\\(h=0.4\\,m\\)"
+    ],
+    respuestaCorrecta: "\\(h=0.8\\,m\\)",
+    formula: "\\(\\frac{1}{2}mv_0^2=mgh \\Rightarrow h=\\frac{v_0^2}{2g}\\)",
+    explicacion: "Por conservación de energía toda la energía cinética se convierte en potencial: h = 4²/(2×10) = 16/20 = 0.8 m. La masa se cancela."
+},
+{
+    pregunta: "Un objeto de \\(m=2\\,kg\\) cae desde \\(h=10\\,m\\). ¿Cuál es su velocidad justo antes de tocar el suelo? (\\(g=10\\,m/s^2\\))",
+    imagen: "",
+    opciones: [
+        "\\(v=\\sqrt{200}\\approx14.14\\,m/s\\)",
+        "\\(v=10\\,m/s\\)",
+        "\\(v=20\\,m/s\\)"
+    ],
+    respuestaCorrecta: "\\(v=\\sqrt{200}\\approx14.14\\,m/s\\)",
+    formula: "\\(mgh=\\frac{1}{2}mv^2 \\Rightarrow v=\\sqrt{2gh}\\)",
+    explicacion: "Por conservación de energía: v = √(2 × 10 × 10) = √200 ≈ 14.14 m/s. La masa se cancela."
+},
+{
+    pregunta: "Una máquina eleva una carga de \\(m=200\\,kg\\) a una altura de \\(h=15\\,m\\) en \\(t=30\\,s\\). ¿Cuál es la potencia de la máquina? (\\(g=10\\,m/s^2\\))",
+    imagen: "",
+    opciones: [
+        "\\(P=1000\\,W\\)",
+        "\\(P=3000\\,W\\)",
+        "\\(P=500\\,W\\)"
+    ],
+    respuestaCorrecta: "\\(P=1000\\,W\\)",
+    formula: "\\(P=\\frac{W}{t}=\\frac{mgh}{t}\\)",
+    explicacion: "W = 200 × 10 × 15 = 30000 J. Potencia: P = 30000/30 = 1000 W = 1 kW."
+},
+{
+    pregunta: "Un bloque de \\(m=10\\,kg\\) se desliza \\(d=6\\,m\\) sobre una superficie con \\(\\mu_k=0.4\\), partiendo del reposo impulsado por \\(F=80\\,N\\). ¿Cuál es su energía cinética al final del recorrido? (\\(g=10\\,m/s^2\\))",
+    imagen: "",
+    opciones: [
+        "\\(E_k=240\\,J\\)",
+        "\\(E_k=480\\,J\\)",
+        "\\(E_k=120\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(E_k=240\\,J\\)",
+    formula: "\\(E_k=W_F - W_{f_k}=(F-\\mu_k mg)\\cdot d\\)",
+    explicacion: "Trabajo de F: 80×6=480 J. Trabajo de fricción: 0.4×10×10×6=240 J. Por teorema trabajo-energía: E_k = 480−240 = 240 J."
+},
+{
+    pregunta: "Un bloque de \\(m=6\\,kg\\) es empujado \\(d=4\\,m\\) hacia arriba por un plano inclinado a \\(30°\\) sin fricción con una fuerza paralela al plano. ¿Cuánto trabajo realiza la gravedad? (\\(g=10\\,m/s^2,\\, \\sin30°=0.5\\))",
+    imagen: "",
+    opciones: [
+        "\\(W_g=-120\\,J\\)",
+        "\\(W_g=120\\,J\\)",
+        "\\(W_g=-240\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(W_g=-120\\,J\\)",
+    formula: "\\(W_g=-mgd\\sin\\theta\\)",
+    explicacion: "La componente de la gravedad paralela al plano se opone al movimiento: W_g = −6×10×4×sin(30°) = −240×0.5 = −120 J. Negativo porque la gravedad actúa en sentido contrario al desplazamiento."
+},
+{
+    pregunta: "Un objeto de \\(m=4\\,kg\\) parte del reposo y se desliza \\(d=5\\,m\\) sin fricción por un plano inclinado a \\(37°\\). ¿Cuál es su energía cinética al llegar al fondo? (\\(g=10\\,m/s^2,\\, \\sin37°=0.6\\))",
+    imagen: "",
+    opciones: [
+        "\\(E_k=120\\,J\\)",
+        "\\(E_k=60\\,J\\)",
+        "\\(E_k=240\\,J\\)"
+    ],
+    respuestaCorrecta: "\\(E_k=120\\,J\\)",
+    formula: "\\(E_k=mgd\\sin\\theta\\)",
+    explicacion: "Toda la energía potencial perdida se convierte en cinética: h = d·sin(37°) = 5×0.6 = 3 m. E_k = mgh = 4×10×3 = 120 J."
+},
+{
+    pregunta: "Un bloque de \\(m=8\\,kg\\) sube \\(d=5\\,m\\) por un plano a \\(30°\\) con \\(\\mu_k=0.2\\). ¿Cuál es la velocidad del bloque al inicio si llega al tope con velocidad cero? (\\(g=10\\,m/s^2,\\, \\sin30°=0.5,\\, \\cos30°=0.866\\))",
+    imagen: "",
+    opciones: [
+        "\\(v_0\\approx8.07\\,m/s\\)",
+        "\\(v_0\\approx7.07\\,m/s\\)",
+        "\\(v_0\\approx10\\,m/s\\)"
+    ],
+    respuestaCorrecta: "\\(v_0\\approx8.07\\,m/s\\)",
+    formula: "\\(\\frac{1}{2}mv_0^2=mgd\\sin\\theta + \\mu_k mgd\\cos\\theta\\)",
+    explicacion: "La energía cinética inicial debe vencer tanto la energía potencial como el trabajo de fricción: ½v₀² = gd(sin30°+μ_k·cos30°) = 10×5×(0.5+0.2×0.866) = 50×(0.5+0.1732) = 50×0.6732 = 33.66. v₀ = √(2×33.66) ≈ 8.07 m/s."
+}
+];
+
+
+// 🔥 ALEATORIO DE PREGUNTAS
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,3);
+
+// 🔥 ALEATORIO DE OPCIONES
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Fórmula:</strong> ${q.formula}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+fetch("https://script.google.com/macros/s/AKfycbx5zMbjXzJScGD6lxl0CkpLgvZRHZkXJ4-oDvD5vPEigFHqqRluUHFOw03aNFxypZ3g/exec",{
+method:"POST",
+body:JSON.stringify({
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje
+})
+});
+}
+
+</script>
+</body>
+</html>
