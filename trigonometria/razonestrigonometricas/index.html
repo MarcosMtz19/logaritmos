@@ -1,96 +1,535 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Teorema de Pitágoras</title>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
-    <style>
-        body {
-            background-color: #ccffcc;
-            font-size: 18px;
-        }
+<meta charset="UTF-8">
+<title id="page-title"></title>
 
-        #quiz-container {
-            width: 80%;
-            max-width: 600px;
-            margin: auto;
-            text-align: center;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            font-size: 20px;
-        }
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
 
-        .question-container, .option-container {
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            margin: 10px 0;
-            padding: 16px;
-            border-radius: 5px;
-            font-size: 20px;
-        }
-
-        #options {
-            padding-left: 0;
-        }
-
-        #options li {
-            list-style: none;
-            margin: 5px 0;
-            padding: 15px;
-            background-color: #e9ffe9;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 18px;
-        }
-
-        #options li:hover {
-            background-color: #d0ffd0;
-        }
-
-        #next-question, #previous-question, #finish-test {
-            margin-top: 20px;
-            padding: 14px 20px;
-            font-size: 20px;
-            cursor: pointer;
-            display: none;
-        }
-
-        #question-number {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-    </style>
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
 </head>
+
 <body>
 
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
 <div id="quiz-container">
-    <div id="question-number"></div>
-    <div class="question-container" id="question"></div>
-    <div id="question-image"></div>
-    <ul id="options"></ul>
-    <button id="previous-question" onclick="loadPreviousQuestion()">Pregunta anterior</button>
-    <button id="next-question" onclick="loadNextQuestion()">Siguiente pregunta</button>
-    <button id="finish-test" onclick="finishTest()" style="display:none;">Terminar Test</button>
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
 </div>
 
 <div id="result"></div>
-<div id="selected-answers"></div>
 
 <script>
-    const allQuestions = [
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Examen simulacro 2do parcial Geometría y Trigonometría";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
         {
-            pregunta: "Determina el valor de 'x' usando razones trigonometricas:",
-            imagen: "https://i.imgur.com/Ro1W6AE.png",
+            pregunta: "De la siguiente figura, ¿Cuánto vale el ángulo interior 'A'?",
+            imagen: "https://i.imgur.com/pnVOJ99.png",
             opciones: [
-                "25 m",
-                "2.5 m",
-                "52 m"
+                "\\(A=20°\\)",
+                "\\(A=110°\\)",
+                "\\(A=106°\\)"
             ],
-            respuestaCorrecta: "25 m",
-            formula: "\\(\\sin{\\alpha}=\\frac{c.o}{hip}\\)",
+            respuestaCorrecta: "\\(A=110°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion: "Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente"
+        },
+        {
+            pregunta: "De la siguiente figura, ¿Cuánto vale la suma de los ángulos interiores 'A+B'?",
+            imagen: "https://i.imgur.com/pnVOJ99.png",
+            opciones: [
+                "\\(A=216°\\)",
+                "\\(A=126°\\)",
+                "\\(A=106°\\)"
+            ],
+            respuestaCorrecta: "\\(A=216°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion: "Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente"
+        },
+        {
+            pregunta: "De la siguiente figura, ¿Cuánto vale la suma de los ángulos interiores 'D+E'?",
+            imagen: "https://i.imgur.com/pnVOJ99.png",
+            opciones: [
+                "\\(A=232°\\)",
+                "\\(A=222°\\)",
+                "\\(A=106°\\)"
+            ],
+            respuestaCorrecta: "\\(A=232°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion: "Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente"
+        },
+        {
+            pregunta: "De la siguiente figura, ¿Cuánto vale el ángulo interior 'C'?",
+            imagen: "https://i.imgur.com/pnVOJ99.png",
+            opciones: [
+                "\\(C=52°\\)",
+                "\\(C=110°\\)",
+                "\\(C=92°\\)"
+            ],
+            respuestaCorrecta: "\\(C=92°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion: "Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente"
+        },
+        {
+            pregunta: "De la siguiente figura, ¿Cuánto vale el ángulo exterior 'A' y 'B'?",
+            imagen: "https://i.imgur.com/BuJPixi.png",
+            opciones: [
+                "\\(A=54° : B=64°\\)",
+                "\\(A=45° : B=46°\\)",
+                "\\(A=50° : B=64°\\)"
+            ],
+            respuestaCorrecta: "\\(A=54° : B=64°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion:"Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente, luego restale el ángulo interno a 180 grados para hayar el externo."
+        },
+        {
+            pregunta: "De la siguiente figura, ¿Cuánto vale la resta de los ángulos exteriores ''B-A' ?",
+            imagen: "https://i.imgur.com/BuJPixi.png",
+            opciones: [
+                "\\(B-A=10°\\)",
+                "\\(B-A=20°\\)",
+                "\\(B-A=-10°\\)"
+            ],
+            respuestaCorrecta: "\\(B-A=10°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion:"Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente, luego restale el ángulo interno a 180 grados para hayar el externo."
+        },
+        {
+            pregunta: "De la siguiente figura, ¿Cuánto vale el ángulo exterior 'D' y 'E'?",
+            imagen: "https://i.imgur.com/BuJPixi.png",
+            opciones: [
+                "\\(D=64° : E=17°\\)",
+                "\\(D=55° : E=71°\\)",
+                "\\(D=46° : E=17°\\)"
+            ],
+            respuestaCorrecta: "\\(D=64° : E=17°\\)",
+            formula: "\\(s_i=180°(n-2)\\)",
+            explicacion:"Detemina el total de la sumatoria de ángulos interiores, despeja a x y sustituye en el ángulo correspondiente, luego restale el ángulo interno a 180 grados para hayar el externo."
+        },
+        {
+            pregunta: "Resuelve",
+            imagen: "https://i.imgur.com/1u7KG7y.png",
+            opciones: [
+                "\\(x=10\\)",
+                "\\(x=15\\)"
+            ],
+            respuestaCorrecta: "\\(x=10\\)",
+            formula: "N/A",
+            explicacion:"Se debe aplicar proporcionalidad de lados homólogos"
+        },
+        {
+            pregunta: "Encuentra el valor de x",
+            imagen: "https://i.imgur.com/I4qmt7f.png",
+            opciones: [
+                "\\(x=10\\)",
+                "\\(x=20\\)"
+            ],
+            respuestaCorrecta: "\\(x=20\\)",
+            formula: "N/A",
+            explicacion: "Se debe aplicar proporcionalidad de lados homólogos"
+        },
+        {
+            pregunta: "Encuentra el valor de x",
+            imagen: "https://i.imgur.com/L1MsyqM.png",
+            opciones: [
+                "\\(x=10\\)",
+                "\\(x=20\\)",
+                "\\(x=15\\)"
+            ],
+            respuestaCorrecta: "\\(x=10\\)",
+            formula: "N/A",
+            explicacion:"Se debe aplicar proporcionalidad de lados homólogos"
+        },
+        {
+            pregunta: "Encuentra el valor de 'x' en la siguiente figura:",
+            imagen: "https://i.imgur.com/iPZrwA8.png",
+            opciones: [
+                "\\(x=24\\)",
+                "\\(x=35\\)",
+                "\\(x=5\\) "
+            ],
+            respuestaCorrecta: "\\(x=24\\)",
+            formula: "N/A",
+            explicacion:"Se debe aplicar proporcionalidad de lados homólogos"
+        },
+        {
+            pregunta: "¿En qué polígono se pueden trazar 14 diagonales en total?",
+            imagen: "",
+            opciones: [
+                "Heptágono",
+                "Octágono",
+                "Nonágono"
+            ],
+            respuestaCorrecta: "Heptágono",
+            formula: "\\(D=\\frac{n(n-3)}{2}\\)",
+            explicacion:"Se sustituye D=14 en la formúla y se despeja a n"
+        },
+        {
+            pregunta: " Determina el polígono en que el número de diagonales en total son los 9/2 del número de lados.",
+            imagen: "",
+            opciones: [
+                "Dodecágono",
+                "Heptágono",
+                "Nonágono"
+            ],
+            respuestaCorrecta: "Dodecágono",
+            formula: "\\(D=\\frac{n(n-3)}{2}\\)",
+            explicacion:"Se sustituye D en la formúla y se despeja a n"
+        },
+        {
+            pregunta: "¿Cuál es el valor de x de la siguiente figura?",
+            imagen: "https://i.imgur.com/KGYhgh4.png",
+            opciones: [
+                "\\(x=65°\\)",
+                "\\(x=6.5°\\)",
+                "\\(x=56°\\)"
+            ],
+            respuestaCorrecta: "\\(x=65°\\)",
+            formula: "N/A",
+            explicacion: "Disponible proximamente."
+        },
+        {
+            pregunta: "¿Cuál es el valor de 'a'  de la siguiente figura?",
+            imagen: "https://i.imgur.com/KGYhgh4.png",
+            opciones: [
+                "\\(a=115°\\)",
+                "\\(a=150°\\)",
+                "\\(a=151°\\)"
+            ],
+            respuestaCorrecta: "\\(a=115°\\)",
+            formula: "N/A",
+            explicacion: "Dispomible proximamente"
+        },
+        {
+            pregunta: "De  la siguiente figura ¿cuál es el valor de x-y ?",
+            imagen: "https://i.imgur.com/SCR9bXG.png",
+            opciones: [
+                "\\(x-y=115°\\)",
+                "\\(x-y=150°\\)",
+                "\\(x-y=151°\\)"
+            ],
+            respuestaCorrecta: "\\(x-y=115°\\)",
+            formula: "N/A",
+            explicacion: "Dispomible proximamente"
+        },
+        {
+            pregunta: "Dada la siguiente figura, ¿Cuál es el valor de la expresión 3x-20 ?",
+            imagen: "https://i.imgur.com/ucPdiLK.png",
+            opciones: [
+                "\\(3x-20=100°\\)",
+                "\\(3x-20=120°\\)",
+                "\\(3x-20=80°\\)"
+            ],
+            respuestaCorrecta: "\\(3x-20=100°\\)",
+            formula: "N/A",
+            explicacion: "Disponible proximámente"
+        },
+        {
+            pregunta: "Dada la siguiente figura, el ángulo 'a' y el ángulo 'e' son: ",
+            imagen: "https://i.imgur.com/ucPdiLK.png",
+            opciones: [
+                "ánglos correspondientes",
+                "ánglos opuestos por un vértice",
+                "ánglos alternos internos"
+            ],
+            respuestaCorrecta: "ánglos correspondientes",
+            formula: "N/A",
+            explicacion: `
+                <p> Si Quieres ver la explicación, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid02679jJyShUXR62JDsd4Rf6kuJc7QEUoXfDk1xw6ckLAuhkrvrNFhWedtnrHgctzmYl%26id%3D100079792827912&show_text=true&width=500" width="500" height="391" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Los ángulos 'x' y '2x-15°' de la siguiente figura son:  ",
+            imagen: "https://i.imgur.com/KGYhgh4.png",
+            opciones: [
+                "ánglos colaterales externos",
+                "ánglos colaterales internos",
+                "ánglos alternos internos"
+            ],
+            respuestaCorrecta: "ánglos colaterales externos",
+            formula: "N/A",
+            explicacion: `
+                <p> Si Quieres ver la explicación, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid0rC66PFxCpoAJYnybXKEUuYF6XYrj8dFaJGyGhN92DJFVkvFxbPDgf5G4bYnvGg15l%26id%3D100079792827912&show_text=true&width=500" width="500" height="392" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "La suma de \\(2y+110°\\) de la siguiente figura, debe ser iguala a:",
+            imagen: "https://i.imgur.com/SCR9bXG.png",
+            opciones: [
+                "\\(180°\\)",
+                "\\(360°\\)",
+                "\\(90°\\)"
+            ],
+            respuestaCorrecta: "\\(180°\\)",
+            formula: "N/A",
+            explicacion: "Recuerda que los ángulos suplementarios son aquellos cuya suma es igual a 180 grados."
+        },
+        {
+            pregunta: "Convierte: 132°14'05'' a Grados:",
+            imagen: "",
+            opciones: [
+                "\\(132.2347\\)",
+                "\\(132.5265\\)"
+            ],
+            respuestaCorrecta: "\\(132.2347\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1453081246010241%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Convierte de 54.13° a grados, minutos y segundos.",
+            imagen: "",
+            opciones: [
+                "\\(54°7'48''\\)",
+                "\\(54°48'7''\\)"
+            ],
+            respuestaCorrecta: "\\(54°7'48''\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1296416055421725%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Convierte \\(\\frac{7}{2}\\pi\\) rad a grados",
+            imagen: "",
+            opciones: [
+                "630°",
+                "430°",
+                "200°"
+            ],
+            respuestaCorrecta: "630°",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1096631795395461%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Encuentra el valor de 'x' en la siguiente figura:",
+            imagen: "https://i.imgur.com/uPonny8.png",
+            opciones: [
+                "\\(x=25°\\)",
+                "\\(x=35°\\)",
+                "\\(x=5°\\) "
+            ],
+            respuestaCorrecta: "\\(x=35°\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1465545947972751%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "¿El valor del ángulo 'a' es 115° y el del ángulo 'x' es 65°?",
+            imagen: "https://i.imgur.com/3OekwW2.png",
+            opciones: [
+                "Cierto",
+                "Falso"
+            ],
+            respuestaCorrecta: "Cierto",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2F100079792827912%2Fvideos%2F1130866149037945%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "¿La suma de ángulos externos de cualquier triángulo es 360°?",
+            imagen: "",
+            opciones: [
+                "Cierto",
+                "Falso"
+            ],
+            respuestaCorrecta: "Cierto",
+            formula: "N/A",
+            explicacion: "Explicación en vídeo disponible proximamente..."
+        },
+        {
+            pregunta: "Determina el valor de 'w' y el valor de 'x'",
+            imagen: "https://i.imgur.com/9LTDtoD.png",
+            opciones: [
+                "\\(x=115° ; w=13°\\)",
+                "\\(x=115° ; w=65°\\)",
+                "\\(x=112° ; w=65°\\)"
+            ],
+            respuestaCorrecta:  "\\(x=115° ; w=13°\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F715760074785409%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Encuentra el valor de 'x' ",
+            imagen: "https://i.imgur.com/XcLYLhS.png",
+            opciones: [
+                "\\(x=\\sqrt{28}\\)",
+                "\\(x=\\sqrt{25}\\)",
+                "\\(x=\\sqrt{82}\\)"
+            ],
+            respuestaCorrecta: "\\(x=\\sqrt{28}\\)",
+            formula: "",
+            explicacion:"Teorema de alturas o Teoremas de semejanza en triángulos rectángulos"
+        },
+        {
+            pregunta: "Encuentra el valor de 'x' ",
+            imagen: "https://i.imgur.com/JVWVivA.png",
+            opciones: [
+                "\\(x=12\\)",
+                "\\(x=10\\)",
+                "\\(x=15\\)"
+            ],
+            respuestaCorrecta: "\\(x=12\\)",
+            formula: "",
+            explicacion:"Teorema de alturas o Teoremas de semejanza en triángulos rectángulos"
+        },
+        {
+            pregunta: "¿Cuál es el valor de \\(\\beta,\\gamma\\), \\(\\theta\\), \\(\\alpha\\)?",
+            imagen: "https://i.imgur.com/QbW8fUC.png",
+            opciones: [
+                "\\(\\beta=86°, \\gamma=50°\\) ; \\(\\theta=110°\\) ; \\(\\alpha=83°\\)",
+                "\\(\\beta=68°, \\gamma=70°\\) ; \\(\\theta=118°\\) ; \\(\\alpha=38°\\)",
+                "\\(\\beta=60°, \\gamma=70°\\) ; \\(\\theta=115°\\) ; \\(\\alpha=83°\\)"
+            ],
+            respuestaCorrecta: "\\(\\beta=68°, \\gamma=70°\\) ; \\(\\theta=118°\\) ; \\(\\alpha=38°\\)",
+            formula: "N/A",
+            explicacion: `
+                <p>Si quieres ver la explicación en video, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F4159625447642069%2F&show_text=false&width=357&t=0" width="357" height="476" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                </div>
+            `
+        },
+        {
+            pregunta: "Resuelve ",
+            imagen: "https://i.imgur.com/feRuPfw.png",
+            opciones: [
+                "Se encuentra a 13 metros",
+                "Se encuentra a 18 metros",
+                "Se encuentra a 20 metros"
+            ],
+            respuestaCorrecta: "Se encuentra a 13 metros",
+            formula: "\\(a=\\sqrt{c^2-b^2}\\)",
             explicacion: "Aplicación de teorema de Pitágoras"
         },
         {
@@ -114,7 +553,7 @@
             ],
             respuestaCorrecta: "\\(x=5\\)",
             formula: "\\(c^2=a^2+b^2\\)",
-            explicacion: "Aplicación de teorema de Pitágoras"
+            explicacion:"Aplicación de teorema de Pitágoras"
         },
         {
             pregunta: "Resuelve",
@@ -126,151 +565,217 @@
             ],
             respuestaCorrecta: "La altura del trapecio es de 15 metros",
             formula: "\\(a=\\sqrt{c^2-b^2}\\)",
-            explicacion: "Aplicación de teorema de Pitágoras"
+            explicacion:"Aplicación de teorema de Pitágoras"
+        },
+        {
+            pregunta: "Encuentra el valor de 'x' ",
+            imagen: "https://i.imgur.com/NdnUVeT.png",
+            opciones: [
+                "x=9",
+                "x=19",
+                "x=10"
+            ],
+            respuestaCorrecta: "x=9",
+            formula: "",
+            explicacion:"Teorema de alturas o Teoremas de semejanza en triángulos rectángulos"
+        },
+        {
+            pregunta: "Encuentra el valor de 'x' ",
+            imagen: "https://i.imgur.com/NdnUVeT.png",
+            opciones: [
+                "x=9",
+                "x=19",
+                "x=10"
+            ],
+            respuestaCorrecta: "x=9",
+            formula: "",
+            explicacion:"Teorema de alturas o Teoremas de semejanza en triángulos rectángulos"
+        },
+        {
+            pregunta: "Resuelve ",
+            imagen: "https://i.imgur.com/xliI0CY.png",
+            opciones: [
+                "\\(x=30°\\)",
+                "\\(x=60°\\)",
+                "\\(x=150°\\)"
+            ],
+            respuestaCorrecta: "\\(x=30°\\)",
+            formula: "",
+            explicacion:"Por ángulo inscrito"
+        },
+        {
+            pregunta: "Resuelve ",
+            imagen: "https://i.imgur.com/CKLuboY.png",
+            opciones: [
+                "\\(x=100°\\)",
+                "\\(x=50°\\)",
+                "\\(x=150°\\)"
+            ],
+            respuestaCorrecta: "\\(x=100°\\)",
+            formula: "",
+            explicacion:"Por ángulo central"
+        },
+        {
+            pregunta: "Resuelve ",
+            imagen: "https://i.imgur.com/5DjGApc.png",
+            opciones: [
+                "\\(x=700°\\)",
+                "\\(x=50°\\)",
+                "\\(x=140°\\)"
+            ],
+            respuestaCorrecta: "\\(x=700°\\)",
+            formula: "",
+            explicacion:"Por ángulo interior"
+        },
+        {
+            pregunta: "Resuelve ",
+            imagen: "https://i.imgur.com/vwnJlzk.png",
+            opciones: [
+                "\\(x=120 ; y=55 ; z=125\\)",
+                "\\(x=55 ; y=125 ; z=120\\)",
+                "\\(x=55 ; y=120 ; z=125\\)"
+            ],
+            respuestaCorrecta: "\\(x=120 ; y=55 ; z=125\\)",
+            formula: "",
+            explicacion:"Los ángulos adyacentes a un mismo lado son suplementarios"
         }
     ];
 
-    const questions = getRandomQuestions(3);
-    let currentQuestionIndex = 0;
-    let score = 0;
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,5);
 
-    function getRandomQuestions(numQuestions) {
-        const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, numQuestions);
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+fetch("https://script.google.com/macros/s/AKfycbzYfsiLoit-YU4XsDN9UW1_-V1xSzj9iPz3xIfDYi0IRdN-GDf1cm8d8yiRZVjgaX8n/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
     }
+});
 
-    function shuffleOptions(questions) {
-        questions.forEach(question => {
-            const correctAnswer = question.respuestaCorrecta;
-            question.opciones = question.opciones.sort(() => Math.random() - 0.5);
-            question.respuestaCorrectaIndex = question.opciones.indexOf(correctAnswer);
-        });
-    }
-
-    shuffleOptions(questions);
-
-    function loadQuestion(questionIndex) {
-        const question = questions[questionIndex];
-        const questionDiv = document.getElementById('question');
-        const questionImageDiv = document.getElementById('question-image');
-
-        questionDiv.innerHTML = question.pregunta;
-        questionImageDiv.innerHTML = '';
-
-        if (question.imagen) {
-            const img = document.createElement('img');
-            img.src = question.imagen;
-            img.alt = "Imagen de la pregunta";
-            img.style.maxWidth = "100%";
-            img.style.height = "auto";
-            questionImageDiv.appendChild(img);
-        }
-
-        document.getElementById('question-number').innerHTML = `Pregunta ${questionIndex + 1} de ${questions.length}`;
-
-        const optionsContainer = document.getElementById('options');
-        optionsContainer.innerHTML = '';
-
-        question.opciones.forEach(function(option) {
-            const optionElement = document.createElement('li');
-            optionElement.className = 'option-container';
-            optionElement.innerHTML = option;
-
-            optionElement.onclick = function() {
-                clearSelections();
-                this.style.backgroundColor = '#66cc66';
-                checkAnswer(option);
-            };
-
-            optionsContainer.appendChild(optionElement);
-        });
-
-        document.getElementById('next-question').style.display = questionIndex < questions.length - 1 ? 'block' : 'none';
-        document.getElementById('previous-question').style.display = questionIndex > 0 ? 'block' : 'none';
-        document.getElementById('finish-test').style.display = questionIndex === questions.length - 1 ? 'block' : 'none';
-
-        MathJax.typesetPromise();
-    }
-
-    function clearSelections() {
-        document.querySelectorAll('#options li').forEach(function(option) {
-            option.style.backgroundColor = '#e9ffe9';
-        });
-    }
-
-    function checkAnswer(selectedOption) {
-        const question = questions[currentQuestionIndex];
-
-        if (question.selectedAnswer === undefined && selectedOption === question.respuestaCorrecta) {
-            score++;
-        }
-
-        if (question.selectedAnswer !== undefined && question.selectedAnswer === question.respuestaCorrecta && selectedOption !== question.respuestaCorrecta) {
-            score--;
-        }
-
-        if (question.selectedAnswer !== undefined && question.selectedAnswer !== question.respuestaCorrecta && selectedOption === question.respuestaCorrecta) {
-            score++;
-        }
-
-        question.selectedAnswer = selectedOption;
-
-        if (currentQuestionIndex === questions.length - 1) {
-            document.getElementById('next-question').style.display = 'none';
-            document.getElementById('finish-test').style.display = 'block';
-        }
-    }
-
-    function loadNextQuestion() {
-        if (currentQuestionIndex < questions.length - 1) {
-            currentQuestionIndex++;
-            loadQuestion(currentQuestionIndex);
-        }
-    }
-
-    function loadPreviousQuestion() {
-        if (currentQuestionIndex > 0) {
-            currentQuestionIndex--;
-            loadQuestion(currentQuestionIndex);
-        }
-    }
-
-    function finishTest() {
-        showResults();
-        document.getElementById('quiz-container').style.display = 'none';
-        document.getElementById('finish-test').style.display = 'none';
-    }
-
-    function showResults() {
-        let resultsHtml = `<h2>Resultado</h2><p>Tu puntuación es ${score} de ${questions.length}.</p><div><h3>Respuestas Correctas, Fórmulas Usadas y Explicaciones:</h3>`;
-
-        questions.forEach(question => {
-            resultsHtml += `<div class="option-container"><strong>Pregunta:</strong> ${question.pregunta} <br>
-            <strong>Respuesta correcta:</strong> ${question.respuestaCorrecta}<br>
-            <strong>Fórmula usada:</strong> ${question.formula}<br>
-            <strong>Explicación:</strong> ${question.explicacion}</div>`;
-
-            if (question.selectedAnswer) {
-                resultsHtml += `<div class="option-container"><strong>Respuesta seleccionada:</strong> ${question.selectedAnswer}</div>`;
-            }
-        });
-
-        resultsHtml += `</div>`;
-        document.getElementById('result').innerHTML = resultsHtml;
-
-        document.getElementById('result').innerHTML += `<p>Si te gustaría reforzar tu conocimiento puedo asesorarte, envíame mensaje vía WhatsApp <a href="https://wa.me/5540972313" target="_blank">5540972313</a>.</p>`;
-
-        MathJax.typesetPromise();
-    }
-
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            location.reload();
-        }
-    });
-
-    loadQuestion(currentQuestionIndex);
 </script>
-
 </body>
 </html>
