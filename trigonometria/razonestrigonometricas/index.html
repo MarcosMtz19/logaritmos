@@ -1,1 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Teorema de Pitágoras</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            background-color: #ccffcc;
+            font-size: 18px;
+        }
 
+        #quiz-container {
+            width: 80%;
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-size: 20px;
+        }
+
+        .question-container, .option-container {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 16px;
+            border-radius: 5px;
+            font-size: 20px;
+        }
+
+        #options {
+            padding-left: 0;
+        }
+
+        #options li {
+            list-style: none;
+            margin: 5px 0;
+            padding: 15px;
+            background-color: #e9ffe9;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        #options li:hover {
+            background-color: #d0ffd0;
+        }
+
+        #next-question, #previous-question, #finish-test {
+            margin-top: 20px;
+            padding: 14px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #question-number {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="question-number"></div>
+    <div class="question-container" id="question"></div>
+    <div id="question-image"></div>
+    <ul id="options"></ul>
+    <button id="previous-question" onclick="loadPreviousQuestion()">Pregunta anterior</button>
+    <button id="next-question" onclick="loadNextQuestion()">Siguiente pregunta</button>
+    <button id="finish-test" onclick="finishTest()" style="display:none;">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+<div id="selected-answers"></div>
+
+<script>
+    const allQuestions = [
+        {
+            pregunta: "Determina el valor de 'x' usando razones trigonometricas:",
+            imagen: "https://i.imgur.com/Ro1W6AE.png",
+            opciones: [
+                "25 m",
+                "2.5 m",
+                "52 m"
+            ],
+            respuestaCorrecta: "25 m",
+            formula: "\\(\\sin{\\alpha}=\\frac{c.o}{hip}\\)",
+            explicacion: "Aplicación de teorema de Pitágoras"
+        },
+        {
+            pregunta: "Encuentra el valor de x",
+            imagen: "https://i.imgur.com/Cjg8zdU.png",
+            opciones: [
+                "\\(x=1\\)",
+                "\\(x=3\\)"
+            ],
+            respuestaCorrecta: "\\(x=3\\)",
+            formula: "\\(c^2=a^2+b^2\\)",
+            explicacion: "Aplicación de teorema de Pitágoras"
+        },
+        {
+            pregunta: "Encuentra el valor de x",
+            imagen: "https://i.imgur.com/iLn562W.png",
+            opciones: [
+                "\\(x=10\\)",
+                "\\(x=25\\)",
+                "\\(x=5\\)"
+            ],
+            respuestaCorrecta: "\\(x=5\\)",
+            formula: "\\(c^2=a^2+b^2\\)",
+            explicacion: "Aplicación de teorema de Pitágoras"
+        },
+        {
+            pregunta: "Resuelve",
+            imagen: "https://i.imgur.com/0uZeQ3Q.png",
+            opciones: [
+                "La altura del trapecio es de 15 metros",
+                "La altura del trapecio es de 13 metros",
+                "La altura del trapecio es de 11 metros"
+            ],
+            respuestaCorrecta: "La altura del trapecio es de 15 metros",
+            formula: "\\(a=\\sqrt{c^2-b^2}\\)",
+            explicacion: "Aplicación de teorema de Pitágoras"
+        }
+    ];
+
+    const questions = getRandomQuestions(3);
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function getRandomQuestions(numQuestions) {
+        const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, numQuestions);
+    }
+
+    function shuffleOptions(questions) {
+        questions.forEach(question => {
+            const correctAnswer = question.respuestaCorrecta;
+            question.opciones = question.opciones.sort(() => Math.random() - 0.5);
+            question.respuestaCorrectaIndex = question.opciones.indexOf(correctAnswer);
+        });
+    }
+
+    shuffleOptions(questions);
+
+    function loadQuestion(questionIndex) {
+        const question = questions[questionIndex];
+        const questionDiv = document.getElementById('question');
+        const questionImageDiv = document.getElementById('question-image');
+
+        questionDiv.innerHTML = question.pregunta;
+        questionImageDiv.innerHTML = '';
+
+        if (question.imagen) {
+            const img = document.createElement('img');
+            img.src = question.imagen;
+            img.alt = "Imagen de la pregunta";
+            img.style.maxWidth = "100%";
+            img.style.height = "auto";
+            questionImageDiv.appendChild(img);
+        }
+
+        document.getElementById('question-number').innerHTML = `Pregunta ${questionIndex + 1} de ${questions.length}`;
+
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+
+        question.opciones.forEach(function(option) {
+            const optionElement = document.createElement('li');
+            optionElement.className = 'option-container';
+            optionElement.innerHTML = option;
+
+            optionElement.onclick = function() {
+                clearSelections();
+                this.style.backgroundColor = '#66cc66';
+                checkAnswer(option);
+            };
+
+            optionsContainer.appendChild(optionElement);
+        });
+
+        document.getElementById('next-question').style.display = questionIndex < questions.length - 1 ? 'block' : 'none';
+        document.getElementById('previous-question').style.display = questionIndex > 0 ? 'block' : 'none';
+        document.getElementById('finish-test').style.display = questionIndex === questions.length - 1 ? 'block' : 'none';
+
+        MathJax.typesetPromise();
+    }
+
+    function clearSelections() {
+        document.querySelectorAll('#options li').forEach(function(option) {
+            option.style.backgroundColor = '#e9ffe9';
+        });
+    }
+
+    function checkAnswer(selectedOption) {
+        const question = questions[currentQuestionIndex];
+
+        if (question.selectedAnswer === undefined && selectedOption === question.respuestaCorrecta) {
+            score++;
+        }
+
+        if (question.selectedAnswer !== undefined && question.selectedAnswer === question.respuestaCorrecta && selectedOption !== question.respuestaCorrecta) {
+            score--;
+        }
+
+        if (question.selectedAnswer !== undefined && question.selectedAnswer !== question.respuestaCorrecta && selectedOption === question.respuestaCorrecta) {
+            score++;
+        }
+
+        question.selectedAnswer = selectedOption;
+
+        if (currentQuestionIndex === questions.length - 1) {
+            document.getElementById('next-question').style.display = 'none';
+            document.getElementById('finish-test').style.display = 'block';
+        }
+    }
+
+    function loadNextQuestion() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            loadQuestion(currentQuestionIndex);
+        }
+    }
+
+    function loadPreviousQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuestion(currentQuestionIndex);
+        }
+    }
+
+    function finishTest() {
+        showResults();
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('finish-test').style.display = 'none';
+    }
+
+    function showResults() {
+        let resultsHtml = `<h2>Resultado</h2><p>Tu puntuación es ${score} de ${questions.length}.</p><div><h3>Respuestas Correctas, Fórmulas Usadas y Explicaciones:</h3>`;
+
+        questions.forEach(question => {
+            resultsHtml += `<div class="option-container"><strong>Pregunta:</strong> ${question.pregunta} <br>
+            <strong>Respuesta correcta:</strong> ${question.respuestaCorrecta}<br>
+            <strong>Fórmula usada:</strong> ${question.formula}<br>
+            <strong>Explicación:</strong> ${question.explicacion}</div>`;
+
+            if (question.selectedAnswer) {
+                resultsHtml += `<div class="option-container"><strong>Respuesta seleccionada:</strong> ${question.selectedAnswer}</div>`;
+            }
+        });
+
+        resultsHtml += `</div>`;
+        document.getElementById('result').innerHTML = resultsHtml;
+
+        document.getElementById('result').innerHTML += `<p>Si te gustaría reforzar tu conocimiento puedo asesorarte, envíame mensaje vía WhatsApp <a href="https://wa.me/5540972313" target="_blank">5540972313</a>.</p>`;
+
+        MathJax.typesetPromise();
+    }
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            location.reload();
+        }
+    });
+
+    loadQuestion(currentQuestionIndex);
+</script>
+
+</body>
+</html>
