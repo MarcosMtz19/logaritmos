@@ -190,7 +190,7 @@ const allQuestions = [
 
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
-.slice(0,3);
+.slice(0,10);
 
 questions.forEach(q=>{
 q.selectedAnswer=null;
@@ -308,6 +308,7 @@ const resumenPreguntas = questions.map((q, index) => {
     return {
         numero: index + 1,
         pregunta: q.pregunta,
+        imagen: q.imagen || "",
         respuestaSeleccionada: q.selectedAnswer || "No respondida",
         respuestaCorrecta: q.respuestaCorrecta,
         formula: q.formula || "N/A",
@@ -316,7 +317,7 @@ const resumenPreguntas = questions.map((q, index) => {
     };
 });
 
-fetch("https://script.google.com/macros/s/AKfycbzd1PAoVKBIE5PnoeKGQoJa5IUvOmlRSKVWd0wVgeeWHOd3gPQvstC9nnvbESuFB6tF/exec",{
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
 method:"POST",
 body:JSON.stringify({
 titulo:testTitle,
