@@ -245,7 +245,7 @@ const allQuestions = [
 
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
-.slice(0,10);
+.slice(0,6);
 
 questions.forEach(q=>{
 q.selectedAnswer=null;
@@ -359,7 +359,19 @@ border-radius:8px;
 document.getElementById("result").innerHTML=html;
 MathJax.typesetPromise();
 
-fetch("https://script.google.com/macros/s/AKfycbzYfsiLoit-YU4XsDN9UW1_-V1xSzj9iPz3xIfDYi0IRdN-GDf1cm8d8yiRZVjgaX8n/exec",{
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbzd1PAoVKBIE5PnoeKGQoJa5IUvOmlRSKVWd0wVgeeWHOd3gPQvstC9nnvbESuFB6tF/exec",{
 method:"POST",
 body:JSON.stringify({
 titulo:testTitle,
@@ -367,7 +379,8 @@ nombre:studentName,
 aciertos:score,
 errores:errores,
 total:total,
-porcentaje:porcentaje
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
 })
 });
 }
