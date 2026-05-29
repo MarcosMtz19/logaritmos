@@ -251,11 +251,11 @@ const allQuestions = [
     formula: "Factoriza numerador: \\((2x-1)(x-2)\\)",
     explicacion: "Factorizando el numerador: \\(\\dfrac{(2x-1)(x-2)}{x-3} < 0\\). Raíces: \\(x=\\frac{1}{2}\\) y \\(x=2\\); restricción: \\(x \\neq 3\\). Tabla de signos: en \\((-\\infty, \\frac{1}{2})\\) el cociente es negativo ✓; en \\((\\frac{1}{2}, 2)\\) es positivo; en \\((2, 3)\\) es negativo ✓; en \\((3,+\\infty)\\) es positivo. Solución: \\(\\left(-\\infty, \\frac{1}{2}\\right) \\cup (2, 3)\\)."
 },
-    ];
+];
 
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
-.slice(0,5);
+.slice(0,10);
 
 questions.forEach(q=>{
 q.selectedAnswer=null;
@@ -369,7 +369,19 @@ border-radius:8px;
 document.getElementById("result").innerHTML=html;
 MathJax.typesetPromise();
 
-fetch("https://script.google.com/macros/s/AKfycbzYfsiLoit-YU4XsDN9UW1_-V1xSzj9iPz3xIfDYi0IRdN-GDf1cm8d8yiRZVjgaX8n/exec",{
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbzd1PAoVKBIE5PnoeKGQoJa5IUvOmlRSKVWd0wVgeeWHOd3gPQvstC9nnvbESuFB6tF/exec",{
 method:"POST",
 body:JSON.stringify({
 titulo:testTitle,
@@ -377,7 +389,8 @@ nombre:studentName,
 aciertos:score,
 errores:errores,
 total:total,
-porcentaje:porcentaje
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
 })
 });
 }
