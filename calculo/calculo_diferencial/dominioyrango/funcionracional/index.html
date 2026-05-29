@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Dominio y rango de funciones cuadráticas";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "¿Cuál es el dominio de la función \\(f(x) = \\dfrac{x+2}{x-3}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+        "\\((-\\infty, -2) \\cup (-2, +\\infty)\\)",
+        "\\(\\mathbb{R}\\)",
+        "\\((-\\infty, -3) \\cup (-3, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+    formula: "Dom: \\(x \\in \\mathbb{R}\\) tal que el denominador \\(\\neq 0\\)",
+    explicacion: "El denominador es \\(x - 3\\). Igualando a cero: \\(x - 3 = 0 \\Rightarrow x = 3\\). Por tanto el dominio excluye \\(x = 3\\): \\((-\\infty, 3) \\cup (3, +\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de la función \\(f(x) = \\dfrac{2x+1}{x-1}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, 1) \\cup (1, +\\infty)\\)",
+        "\\((-\\infty, -1) \\cup (-1, +\\infty)\\)",
+        "\\((-\\infty, 2) \\cup (2, +\\infty)\\)",
+        "\\(\\mathbb{R}\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, 2) \\cup (2, +\\infty)\\)",
+    formula: "Despeja \\(x\\) en función de \\(y\\) e identifica el valor excluido",
+    explicacion: "Sea \\(y = \\dfrac{2x+1}{x-1}\\). Despejando: \\(y(x-1) = 2x+1 \\Rightarrow x(y-2) = y+1 \\Rightarrow x = \\dfrac{y+1}{y-2}\\). El valor \\(y = 2\\) hace indefinida la expresión, por tanto el rango es \\((-\\infty, 2) \\cup (2, +\\infty)\\). ✓"
+},
+{
+    pregunta: "Para la función \\(f(x) = \\dfrac{x-4}{2x+6}\\), ¿cuál es el dominio?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, -3) \\cup (-3, +\\infty)\\)",
+        "\\((-\\infty, 4) \\cup (4, +\\infty)\\)",
+        "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+        "\\((-\\infty, 2) \\cup (2, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, -3) \\cup (-3, +\\infty)\\)",
+    formula: "Dom: denominador \\(\\neq 0\\)",
+    explicacion: "El denominador es \\(2x + 6\\). Igualando a cero: \\(2x + 6 = 0 \\Rightarrow x = -3\\). Por tanto el dominio excluye \\(x = -3\\): \\((-\\infty, -3) \\cup (-3, +\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de \\(f(x) = \\dfrac{3x-5}{x+2}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, -2) \\cup (-2, +\\infty)\\)",
+        "\\((-\\infty, 2) \\cup (2, +\\infty)\\)",
+        "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+        "\\(\\mathbb{R}\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+    formula: "Despeja \\(x\\) en función de \\(y\\) e identifica el valor excluido",
+    explicacion: "Sea \\(y = \\dfrac{3x-5}{x+2}\\). Despejando: \\(y(x+2) = 3x-5 \\Rightarrow x(y-3) = -5-2y \\Rightarrow x = \\dfrac{-5-2y}{y-3}\\). El valor \\(y = 3\\) hace indefinida la expresión, por tanto el rango es \\((-\\infty, 3) \\cup (3, +\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de la función \\(f(x) = \\dfrac{5}{x-1}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, 1) \\cup (1, +\\infty)\\)",
+        "\\((-\\infty, 0) \\cup (0, +\\infty)\\)",
+        "\\((-\\infty, 0) \\cup (0, +\\infty)\\)",
+        "\\(\\mathbb{R}\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, 0) \\cup (0, +\\infty)\\)",
+    formula: "Despeja \\(x\\) en función de \\(y\\): \\(x = 1 + \\dfrac{5}{y}\\)",
+    explicacion: "Sea \\(y = \\dfrac{5}{x-1}\\). Despejando: \\(x - 1 = \\dfrac{5}{y} \\Rightarrow x = 1 + \\dfrac{5}{y}\\). El valor \\(y = 0\\) hace la expresión indefinida (división por cero), por tanto el rango excluye \\(y = 0\\): \\((-\\infty, 0) \\cup (0, +\\infty)\\). ✓"
+},
+{
+    pregunta: "Para la función \\(f(x) = \\dfrac{x+1}{3x-9}\\), ¿cuál es el dominio?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+        "\\((-\\infty, -1) \\cup (-1, +\\infty)\\)",
+        "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+        "\\((-\\infty, -3) \\cup (-3, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, 3) \\cup (3, +\\infty)\\)",
+    formula: "Dom: denominador \\(\\neq 0\\)",
+    explicacion: "El denominador es \\(3x - 9 = 3(x-3)\\). Igualando a cero: \\(x - 3 = 0 \\Rightarrow x = 3\\). Por tanto el dominio excluye \\(x = 3\\): \\((-\\infty, 3) \\cup (3, +\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de \\(f(x) = \\dfrac{2-x}{x+5}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, -1) \\cup (-1, +\\infty)\\)",
+        "\\((-\\infty, 5) \\cup (5, +\\infty)\\)",
+        "\\((-\\infty, -1) \\cup (-1, +\\infty)\\)",
+        "\\((-\\infty, 2) \\cup (2, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, -1) \\cup (-1, +\\infty)\\)",
+    formula: "Despeja \\(x\\) en función de \\(y\\) e identifica el valor excluido",
+    explicacion: "Sea \\(y = \\dfrac{2-x}{x+5}\\). Despejando: \\(y(x+5) = 2-x \\Rightarrow yx + 5y = 2 - x \\Rightarrow x(y+1) = 2 - 5y \\Rightarrow x = \\dfrac{2-5y}{y+1}\\). El valor \\(y = -1\\) hace indefinida la expresión, por tanto el rango es \\((-\\infty, -1) \\cup (-1, +\\infty)\\). ✓"
+},
+{
+    pregunta: "El rango de \\(f(x) = \\dfrac{4x+3}{2x-1}\\) es:",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, 2) \\cup (2, +\\infty)\\)",
+        "\\((-\\infty, 4) \\cup (4, +\\infty)\\)",
+        "\\((-\\infty, 2) \\cup (2, +\\infty)\\)",
+        "\\((-\\infty, 1) \\cup (1, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, 2) \\cup (2, +\\infty)\\)",
+    formula: "Despeja \\(x\\) en función de \\(y\\) e identifica el valor excluido",
+    explicacion: "Sea \\(y = \\dfrac{4x+3}{2x-1}\\). Despejando: \\(y(2x-1) = 4x+3 \\Rightarrow 2xy - y = 4x + 3 \\Rightarrow x(2y-4) = 3+y \\Rightarrow x = \\dfrac{3+y}{2(y-2)}\\). El valor \\(y = 2\\) hace indefinida la expresión, por tanto el rango es \\((-\\infty, 2) \\cup (2, +\\infty)\\). ✓"
+},
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,5);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbzd1PAoVKBIE5PnoeKGQoJa5IUvOmlRSKVWd0wVgeeWHOd3gPQvstC9nnvbESuFB6tF/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
