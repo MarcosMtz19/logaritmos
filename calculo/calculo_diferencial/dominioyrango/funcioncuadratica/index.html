@@ -1,1 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
 
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Dominio y rango de funciones cuadráticas";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "¿Cuál es el dominio y rango de \\(f(x) = x^2 - 2x + 1\\)?",
+    imagen: "",
+    opciones: [
+        "Dom: \\(\\mathbb{R}\\), Ran: \\([0, +\\infty)\\)",
+        "Dom: \\([0, +\\infty)\\), Ran: \\(\\mathbb{R}\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, 0]\\)",
+        "Dom: \\((-\\infty, +\\infty)\\), Ran: \\((-\\infty, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "Dom: \\(\\mathbb{R}\\), Ran: \\([0, +\\infty)\\)",
+    formula: "Forma de vértice: \\(f(x) = (x-h)^2 + k\\)",
+    explicacion: "Factorizando: \\(f(x) = (x-1)^2\\). El dominio de toda función polinomial es \\(\\mathbb{R}\\). Como \\((x-1)^2 \\geq 0\\) para todo \\(x\\), con mínimo 0 en \\(x=1\\), el rango es \\([0, +\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio y rango de \\(f(x) = x(2 - x)\\)?",
+    imagen: "",
+    opciones: [
+        "Dom: \\([0, +\\infty)\\), Ran: \\([0, +\\infty)\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\([1, +\\infty)\\)",
+        "Dom: \\((-\\infty, 1]\\), Ran: \\(\\mathbb{R}\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, 1]\\)"
+    ],
+    respuestaCorrecta: "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, 1]\\)",
+    formula: "NA",
+    explicacion: "N/A"
+},
+{
+    pregunta: "¿Cuál es el dominio y rango de \\(f(x) = x^2 + 6x + 4\\)?",
+    imagen: "",
+    opciones: [
+        "Dom: \\([-5, +\\infty)\\), Ran: \\(\\mathbb{R}\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\([-5, +\\infty)\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, -5]\\)",
+        "Dom: \\((0, +\\infty)\\), Ran: \\([-5, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "Dom: \\(\\mathbb{R}\\), Ran: \\([-5, +\\infty)\\)",
+    formula: "Completar el cuadrado: \\(f(x) = (x+3)^2 - 5\\)",
+    explicacion: "Completando el cuadrado: \\(f(x) = (x+3)^2 - 5\\). El dominio es \\(\\mathbb{R}\\). El vértice está en \\(x = -3\\) con valor mínimo \\(f(-3) = -5\\). Como la parábola abre hacia arriba, el rango es \\([-5, +\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio y rango de \\(g(x) = 1 - 2x - x^2\\)?",
+    imagen: "",
+    opciones: [
+        "Dom: \\(\\mathbb{R}\\), Ran: \\([2, +\\infty)\\)",
+        "Dom: \\([2, +\\infty)\\), Ran: \\(\\mathbb{R}\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, 2]\\)",
+        "Dom: \\((-\\infty, 2]\\), Ran: \\((-\\infty, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, 2]\\)",
+    formula: "Completar el cuadrado: \\(g(x) = -(x+1)^2 + 2\\)",
+    explicacion: "Reescribiendo: \\(g(x) = -(x^2 + 2x) + 1 = -(x+1)^2 + 1 + 1 = -(x+1)^2 + 2\\). El dominio es \\(\\mathbb{R}\\). Como la parábola abre hacia abajo, el vértice \\((−1, 2)\\) es el máximo. Rango: \\((-\\infty, 2]\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio y rango de \\(g(x) = x^2 - 36x + 32\\)?",
+    imagen: "",
+    opciones: [
+        "Dom: \\(\\mathbb{R}\\), Ran: \\((-\\infty, -292]\\)",
+        "Dom: \\([-292, +\\infty)\\), Ran: \\(\\mathbb{R}\\)",
+        "Dom: \\(\\mathbb{R}\\), Ran: \\([-292, +\\infty)\\)",
+        "Dom: \\((0, +\\infty)\\), Ran: \\([-292, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "Dom: \\(\\mathbb{R}\\), Ran: \\([-292, +\\infty)\\)",
+    formula: "Completar el cuadrado: \\(g(x) = (x-18)^2 - 292\\)",
+    explicacion: "Completando el cuadrado: \\(g(x) = (x-18)^2 - 324 + 32 = (x-18)^2 - 292\\). El dominio es \\(\\mathbb{R}\\). El vértice está en \\(x=18\\) con valor mínimo \\(-292\\). Como la parábola abre hacia arriba, el rango es \\([-292, +\\infty)\\). ✓"
+},
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,3);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbzd1PAoVKBIE5PnoeKGQoJa5IUvOmlRSKVWd0wVgeeWHOd3gPQvstC9nnvbESuFB6tF/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
