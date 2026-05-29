@@ -1,1 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
 
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Aplicación de las propiedades de los logarítmos";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "Desarrolla la siguiente expresión usando propiedades de logaritmos: \\(\\log_2 3x^4\\sqrt{y}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\log_2 3 + 4\\log_2 x + \\dfrac{1}{2}\\log_2 y\\)",
+        "\\(3\\log_2 x + 4\\log_2 y\\)",
+        "\\(\\log_2 3 + 4\\log_2 x - \\dfrac{1}{2}\\log_2 y\\)",
+        "\\(4\\log_2 3x + \\dfrac{1}{2}\\log_2 y\\)"
+    ],
+    respuestaCorrecta: "\\(\\log_2 3 + 4\\log_2 x + \\dfrac{1}{2}\\log_2 y\\)",
+    formula: "\\(\\log_b(MNP) = \\log_b M + \\log_b N + \\log_b P\\) y \\(\\log_b(M^n) = n\\log_b M\\)",
+    explicacion: "Aplicando propiedad de producto: \\(\\log_2 3 + \\log_2 x^4 + \\log_2 y^{1/2}\\). Luego propiedad de potencia: \\(\\log_2 3 + 4\\log_2 x + \\dfrac{1}{2}\\log_2 y\\). ✓"
+},
+{
+    pregunta: "Desarrolla a su forma más simple: \\(\\log_y \\sqrt[4]{(x-5)^3}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\dfrac{3}{4}\\log_y(x-5)\\)",
+        "\\(4\\log_y(x-5)^3\\)",
+        "\\(\\dfrac{4}{3}\\log_y(x-5)\\)",
+        "\\(3\\log_y(x-5)^4\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{3}{4}\\log_y(x-5)\\)",
+    formula: "\\(\\sqrt[n]{M^m} = M^{m/n}\\) y \\(\\log_b(M^n) = n\\log_b M\\)",
+    explicacion: "Reescribiendo la raíz como potencia: \\(\\log_y (x-5)^{3/4}\\). Aplicando propiedad de potencia: \\(\\dfrac{3}{4}\\log_y(x-5)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el desarrollo de la expresión \\(\\log_a \\dfrac{(x+y)^3}{(x-y)^2}\\)?",
+    imagen: "",
+    opciones: [
+        "\\(3\\log_a(x+y) - 2\\log_a(x-y)\\)",
+        "\\(3\\log_a(x+y) + 2\\log_a(x-y)\\)",
+        "\\(\\dfrac{3}{2}\\log_a\\dfrac{x+y}{x-y}\\)",
+        "\\(\\log_a(x+y)^3 + \\log_a(x-y)^2\\)"
+    ],
+    respuestaCorrecta: "\\(3\\log_a(x+y) - 2\\log_a(x-y)\\)",
+    formula: "\\(\\log_b\\dfrac{M}{N} = \\log_b M - \\log_b N\\) y \\(\\log_b(M^n) = n\\log_b M\\)",
+    explicacion: "Propiedad de cociente: \\(\\log_a(x+y)^3 - \\log_a(x-y)^2\\). Propiedad de potencia: \\(3\\log_a(x+y) - 2\\log_a(x-y)\\). ✓"
+},
+{
+    pregunta: "Desarrolla la siguiente expresión: \\(\\ln\\!\\left[\\dfrac{e^{3x}(x+1)}{2x^2}\\right]^3\\)",
+    imagen: "",
+    opciones: [
+        "\\(9x + 3\\ln(x+1) - 3\\ln 2 - 6\\ln x\\)",
+        "\\(3x + \\ln(x+1) - \\ln 2 - 2\\ln x\\)",
+        "\\(9x + 3\\ln(x+1) + 3\\ln 2 - 6\\ln x\\)",
+        "\\(9x - 3\\ln(x+1) - 3\\ln 2 + 6\\ln x\\)"
+    ],
+    respuestaCorrecta: "\\(9x + 3\\ln(x+1) - 3\\ln 2 - 6\\ln x\\)",
+    formula: "\\(\\ln(M^n)=n\\ln M\\), \\(\\ln(e^k)=k\\), propiedad de producto y cociente",
+    explicacion: "Primero aplicamos el exponente exterior: \\(3\\ln\\!\\left[\\dfrac{e^{3x}(x+1)}{2x^2}\\right]\\). Luego expandimos: \\(3\\left[\\ln e^{3x} + \\ln(x+1) - \\ln 2 - \\ln x^2\\right]\\). Como \\(\\ln e^{3x} = 3x\\) y \\(\\ln x^2 = 2\\ln x\\): \\(3[3x + \\ln(x+1) - \\ln 2 - 2\\ln x] = 9x + 3\\ln(x+1) - 3\\ln 2 - 6\\ln x\\). ✓"
+},
+{
+    pregunta: "Desarrolla la siguiente expresión: \\(\\log_3\\!\\sqrt{\\dfrac{3x^4}{2y^5}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\dfrac{1}{2} + 2\\log_3 x - \\dfrac{1}{2}\\log_3 2 - \\dfrac{5}{2}\\log_3 y\\)",
+        "\\(1 + 4\\log_3 x - \\log_3 2 - 5\\log_3 y\\)",
+        "\\(\\dfrac{1}{2} + 2\\log_3 x + \\dfrac{1}{2}\\log_3 2 - \\dfrac{5}{2}\\log_3 y\\)",
+        "\\(2\\log_3 x - \\dfrac{5}{2}\\log_3 y\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{1}{2} + 2\\log_3 x - \\dfrac{1}{2}\\log_3 2 - \\dfrac{5}{2}\\log_3 y\\)",
+    formula: "\\(\\sqrt{M} = M^{1/2}\\), propiedad de cociente, producto y potencia",
+    explicacion: "Reescribiendo: \\(\\dfrac{1}{2}\\log_3\\!\\left(\\dfrac{3x^4}{2y^5}\\right)\\). Expandiendo con cociente y producto: \\(\\dfrac{1}{2}[\\log_3 3 + \\log_3 x^4 - \\log_3 2 - \\log_3 y^5]\\). Como \\(\\log_3 3 = 1\\): \\(\\dfrac{1}{2}[1 + 4\\log_3 x - \\log_3 2 - 5\\log_3 y] = \\dfrac{1}{2} + 2\\log_3 x - \\dfrac{1}{2}\\log_3 2 - \\dfrac{5}{2}\\log_3 y\\). ✓"
+},
+    ];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,10);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbzd1PAoVKBIE5PnoeKGQoJa5IUvOmlRSKVWd0wVgeeWHOd3gPQvstC9nnvbESuFB6tF/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
