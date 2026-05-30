@@ -186,7 +186,59 @@ const allQuestions = [
     formula: "\\(\\sqrt{M} = M^{1/2}\\), propiedad de cociente, producto y potencia",
     explicacion: "Reescribiendo: \\(\\dfrac{1}{2}\\log_3\\!\\left(\\dfrac{3x^4}{2y^5}\\right)\\). Expandiendo con cociente y producto: \\(\\dfrac{1}{2}[\\log_3 3 + \\log_3 x^4 - \\log_3 2 - \\log_3 y^5]\\). Como \\(\\log_3 3 = 1\\): \\(\\dfrac{1}{2}[1 + 4\\log_3 x - \\log_3 2 - 5\\log_3 y] = \\dfrac{1}{2} + 2\\log_3 x - \\dfrac{1}{2}\\log_3 2 - \\dfrac{5}{2}\\log_3 y\\). ✓"
 },
-    ];
+{
+    pregunta: "Escribe como un solo logaritmo: \\(\\log x + \\log y - \\log z\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\log\\!\\left(\\dfrac{xy}{z}\\right)\\)",
+        "\\(\\log(x + y - z)\\)",
+        "\\(\\log\\!\\left(\\dfrac{x}{yz}\\right)\\)",
+        "\\(\\log(xyz)\\)"
+    ],
+    respuestaCorrecta: "\\(\\log\\!\\left(\\dfrac{xy}{z}\\right)\\)",
+    formula: "\\(\\log M + \\log N = \\log(MN)\\) y \\(\\log M - \\log N = \\log\\!\\left(\\dfrac{M}{N}\\right)\\)",
+    explicacion: "Aplicando propiedad de producto: \\(\\log x + \\log y = \\log(xy)\\). Luego propiedad de cociente: \\(\\log(xy) - \\log z = \\log\\!\\left(\\dfrac{xy}{z}\\right)\\). ✓"
+},
+{
+    pregunta: "Expresa como un solo logaritmo: \\(2 + 3\\log_a(a+1) - \\dfrac{1}{4}\\log_a(a-1)\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\log_a\\!\\left[\\dfrac{a^2(a+1)^3}{(a-1)^{1/4}}\\right]\\)",
+        "\\(\\log_a\\!\\left[\\dfrac{(a+1)^3}{a^2(a-1)^{1/4}}\\right]\\)",
+        "\\(\\log_a\\!\\left[a^2(a+1)^3(a-1)^{1/4}\\right]\\)",
+        "\\(\\log_a\\!\\left[\\dfrac{2(a+1)^3}{(a-1)^{1/4}}\\right]\\)"
+    ],
+    respuestaCorrecta: "\\(\\log_a\\!\\left[\\dfrac{a^2(a+1)^3}{(a-1)^{1/4}}\\right]\\)",
+    formula: "\\(n = \\log_a(a^n)\\) y \\(n\\log_b M = \\log_b(M^n)\\)",
+    explicacion: "Convirtiendo el 2: \\(2 = \\log_a(a^2)\\). Aplicando propiedad de potencia: \\(3\\log_a(a+1) = \\log_a(a+1)^3\\) y \\(\\dfrac{1}{4}\\log_a(a-1) = \\log_a(a-1)^{1/4}\\). Condensando con producto y cociente: \\(\\log_a\\!\\left[\\dfrac{a^2(a+1)^3}{(a-1)^{1/4}}\\right]\\). ✓"
+},
+{
+    pregunta: "Escribe como un solo logaritmo: \\(\\dfrac{1}{3}\\log(x+1) + \\dfrac{1}{3}\\log(x-2) - 2\\log x - 3\\log(x+3)\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\log\\!\\left[\\dfrac{\\sqrt[3]{(x+1)(x-2)}}{x^2(x+3)^3}\\right]\\)",
+        "\\(\\log\\!\\left[\\dfrac{(x+1)(x-2)}{x^2(x+3)^3}\\right]^{1/3}\\)",
+        "\\(\\log\\!\\left[\\dfrac{\\sqrt[3]{(x+1)(x-2)}}{x^5(x+3)}\\right]\\)",
+        "\\(\\log\\!\\left[\\dfrac{(x+1)^{1/3}(x-2)^{1/3}}{x^2+(x+3)^3}\\right]\\)"
+    ],
+    respuestaCorrecta: "\\(\\log\\!\\left[\\dfrac{\\sqrt[3]{(x+1)(x-2)}}{x^2(x+3)^3}\\right]\\)",
+    formula: "Propiedad de potencia, producto y cociente",
+    explicacion: "Aplicando propiedad de potencia: \\(\\log(x+1)^{1/3} + \\log(x-2)^{1/3} - \\log x^2 - \\log(x+3)^3\\). Agrupando con producto en el numerador y denominador: \\(\\log\\!\\left[\\dfrac{(x+1)^{1/3}(x-2)^{1/3}}{x^2(x+3)^3}\\right] = \\log\\!\\left[\\dfrac{\\sqrt[3]{(x+1)(x-2)}}{x^2(x+3)^3}\\right]\\). ✓"
+},
+{
+    pregunta: "Expresa como un solo logaritmo: \\(x - 3 + \\dfrac{2}{3}\\ln(x-2) - \\dfrac{1}{3}\\ln(x+1)\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\ln\\!\\left[\\dfrac{e^{x-3}(x-2)^{2/3}}{(x+1)^{1/3}}\\right]\\)",
+        "\\(\\ln\\!\\left[\\dfrac{e^x(x-2)^{2/3}}{e^3(x+1)^{1/3}}\\right]\\)",
+        "\\(\\ln\\!\\left[e^{x-3} \\cdot \\sqrt[3]{\\dfrac{(x-2)^2}{x+1}}\\right]\\)",
+        "\\(\\ln\\!\\left[\\dfrac{e^{x-3}}{(x-2)^{2/3}(x+1)^{1/3}}\\right]\\)"
+    ],
+    respuestaCorrecta: "\\(\\ln\\!\\left[e^{x-3} \\cdot \\sqrt[3]{\\dfrac{(x-2)^2}{x+1}}\\right]\\)",
+    formula: "\\(k = \\ln(e^k)\\) y propiedad de potencia, producto y cociente",
+    explicacion: "Convirtiendo los términos sin logaritmo: \\(x - 3 = \\ln(e^{x-3})\\). Aplicando propiedad de potencia: \\(\\dfrac{2}{3}\\ln(x-2) = \\ln(x-2)^{2/3}\\) y \\(\\dfrac{1}{3}\\ln(x+1) = \\ln(x+1)^{1/3}\\). Condensando: \\(\\ln\\!\\left[\\dfrac{e^{x-3}\\cdot(x-2)^{2/3}}{(x+1)^{1/3}}\\right] = \\ln\\!\\left[e^{x-3}\\cdot\\sqrt[3]{\\dfrac{(x-2)^2}{x+1}}\\right]\\). ✓"
+},
+];
 
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
