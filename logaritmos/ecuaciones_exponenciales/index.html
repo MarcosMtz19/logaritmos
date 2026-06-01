@@ -1,1 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
 
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Ecuaciones exponenciales";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(3^x = 21\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx 2.77\\)",
+        "\\(x \\approx 3.00\\)",
+        "\\(x \\approx 1.32\\)",
+        "\\(x \\approx 7.00\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx 2.77\\)",
+    formula: "\\(b^x = M \\Rightarrow x = \\dfrac{\\log M}{\\log b}\\)",
+    explicacion: "Aplicando logaritmo a ambos lados: \\(x \\log 3 = \\log 21\\). Despejando: \\(x = \\dfrac{\\log 21}{\\log 3} = \\dfrac{1.3222}{0.4771} \\approx 2.77\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(8^x = 0.5\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx 0.33\\)",
+        "\\(x \\approx -0.33\\)",
+        "\\(x \\approx -3.00\\)",
+        "\\(x \\approx 0.50\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx -0.33\\)",
+    formula: "\\(x = \\dfrac{\\log 0.5}{\\log 8}\\)",
+    explicacion: "Aplicando logaritmo: \\(x = \\dfrac{\\log 0.5}{\\log 8} = \\dfrac{-0.3010}{0.9031} \\approx -0.33\\). Tiene sentido: \\(8^{-1/3} = \\frac{1}{2} = 0.5\\), y \\(-\\frac{1}{3} \\approx -0.33\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\((1.8)^y = 2.3\\)",
+    imagen: "",
+    opciones: [
+        "\\(y \\approx 1.41\\)",
+        "\\(y \\approx 2.30\\)",
+        "\\(y \\approx 0.71\\)",
+        "\\(y \\approx 1.80\\)"
+    ],
+    respuestaCorrecta: "\\(y \\approx 1.41\\)",
+    formula: "\\(y = \\dfrac{\\log 2.3}{\\log 1.8}\\)",
+    explicacion: "Aplicando logaritmo: \\(y = \\dfrac{\\log 2.3}{\\log 1.8} = \\dfrac{0.3617}{0.2553} \\approx 1.41\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\((0.97)^x = 1.5\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx 13.31\\)",
+        "\\(x \\approx -13.31\\)",
+        "\\(x \\approx -1.50\\)",
+        "\\(x \\approx 0.97\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx -13.31\\)",
+    formula: "\\(x = \\dfrac{\\log 1.5}{\\log 0.97}\\)",
+    explicacion: "Aplicando logaritmo: \\(x = \\dfrac{\\log 1.5}{\\log 0.97} = \\dfrac{0.1761}{-0.01323} \\approx -13.31\\). El resultado es negativo porque la base 0.97 < 1: para crecer, el exponente debe ser negativo. ✓"
+},
+{
+    pregunta: "Resuelve: \\(4^{3x-2} = 5^{2x+2}\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx 6.37\\)",
+        "\\(x \\approx 4.00\\)",
+        "\\(x \\approx 2.50\\)",
+        "\\(x \\approx 8.12\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx 6.37\\)",
+    formula: "Aplicar \\(\\log\\) a ambos lados y despejar \\(x\\)",
+    explicacion: "Aplicando logaritmo: \\((3x-2)\\log 4 = (2x+2)\\log 5\\). Expandiendo: \\(1.8062x - 1.2042 = 1.3980x + 1.3980\\). Despejando: \\(0.4082x = 2.6022 \\Rightarrow x \\approx 6.37\\). ✓"
+},
+{
+    pregunta: "Resuelve: \\(3^{x+4} = 2^{1-3x}\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx -1.16\\)",
+        "\\(x \\approx 1.16\\)",
+        "\\(x \\approx -2.00\\)",
+        "\\(x \\approx 0.50\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx -1.16\\)",
+    formula: "Aplicar \\(\\log\\) a ambos lados y despejar \\(x\\)",
+    explicacion: "Aplicando logaritmo: \\((x+4)\\log 3 = (1-3x)\\log 2\\). Expandiendo: \\(0.4771x + 1.9084 = 0.3010 - 0.9030x\\). Despejando: \\(1.3801x = -1.6074 \\Rightarrow x \\approx -1.16\\). ✓"
+},
+{
+    pregunta: "Resuelve: \\(5 \\cdot 3^{2x+1} = 7^{1-x}\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx -0.18\\)",
+        "\\(x \\approx 0.18\\)",
+        "\\(x \\approx -1.00\\)",
+        "\\(x \\approx 0.75\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx -0.18\\)",
+    formula: "Aplicar \\(\\log\\) a ambos lados: \\(\\log 5 + (2x+1)\\log 3 = (1-x)\\log 7\\)",
+    explicacion: "Expandiendo: \\(0.6990 + 0.9542x + 0.4771 = 0.8451 - 0.8451x\\). Simplificando: \\(1.8063x = -0.3310 \\Rightarrow x \\approx -0.18\\). ✓"
+},
+{
+    pregunta: "Resuelve: \\(5 \\cdot 7^x = 6 \\cdot 8^x\\)",
+    imagen: "",
+    opciones: [
+        "\\(x \\approx -1.36\\)",
+        "\\(x \\approx 1.36\\)",
+        "\\(x \\approx -0.58\\)",
+        "\\(x \\approx 2.10\\)"
+    ],
+    respuestaCorrecta: "\\(x \\approx -1.36\\)",
+    formula: "\\(\\log 5 + x\\log 7 = \\log 6 + x\\log 8 \\Rightarrow x(\\log 7 - \\log 8) = \\log 6 - \\log 5\\)",
+    explicacion: "Aplicando logaritmo: \\(\\log 5 + x\\log 7 = \\log 6 + x\\log 8\\). Despejando \\(x\\): \\(x(\\log 7 - \\log 8) = \\log 6 - \\log 5 \\Rightarrow x = \\dfrac{0.0792}{-0.0580} \\approx -1.36\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(5^{2x-1} = 25\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = \\dfrac{3}{2}\\)",
+        "\\(x = 2\\)",
+        "\\(x = 1\\)",
+        "\\(x = \\dfrac{1}{2}\\)"
+    ],
+    respuestaCorrecta: "\\(x = \\dfrac{3}{2}\\)",
+    formula: "Si \\(b^m = b^n\\) entonces \\(m = n\\)",
+    explicacion: "Expresando 25 como potencia de 5: \\(25 = 5^2\\). La ecuación queda \\(5^{2x-1} = 5^2\\). Igualando exponentes: \\(2x - 1 = 2 \\Rightarrow 2x = 3 \\Rightarrow x = \\dfrac{3}{2}\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(6^{2x-3} = 216\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 3\\)",
+        "\\(x = 2\\)",
+        "\\(x = 4\\)",
+        "\\(x = \\dfrac{3}{2}\\)"
+    ],
+    respuestaCorrecta: "\\(x = 3\\)",
+    formula: "Si \\(b^m = b^n\\) entonces \\(m = n\\)",
+    explicacion: "Expresando 216 como potencia de 6: \\(216 = 6^3\\). La ecuación queda \\(6^{2x-3} = 6^3\\). Igualando exponentes: \\(2x - 3 = 3 \\Rightarrow 2x = 6 \\Rightarrow x = 3\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(3^{x+2} = 81\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 2\\)",
+        "\\(x = 3\\)",
+        "\\(x = 4\\)",
+        "\\(x = 1\\)"
+    ],
+    respuestaCorrecta: "\\(x = 2\\)",
+    formula: "Si \\(b^m = b^n\\) entonces \\(m = n\\)",
+    explicacion: "Expresando 81 como potencia de 3: \\(81 = 3^4\\). La ecuación queda \\(3^{x+2} = 3^4\\). Igualando exponentes: \\(x + 2 = 4 \\Rightarrow x = 2\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(3^{5x} = 9^{x+6}\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 4\\)",
+        "\\(x = 6\\)",
+        "\\(x = 3\\)",
+        "\\(x = 2\\)"
+    ],
+    respuestaCorrecta: "\\(x = 4\\)",
+    formula: "Expresar ambos lados con la misma base: \\(9 = 3^2\\)",
+    explicacion: "Convirtiendo: \\(9^{x+6} = (3^2)^{x+6} = 3^{2x+12}\\). La ecuación queda \\(3^{5x} = 3^{2x+12}\\). Igualando exponentes: \\(5x = 2x + 12 \\Rightarrow 3x = 12 \\Rightarrow x = 4\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(7^{5x} = 49^{x+6}\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 4\\)",
+        "\\(x = 6\\)",
+        "\\(x = 2\\)",
+        "\\(x = 8\\)"
+    ],
+    respuestaCorrecta: "\\(x = 4\\)",
+    formula: "Expresar ambos lados con la misma base: \\(49 = 7^2\\)",
+    explicacion: "Convirtiendo: \\(49^{x+6} = (7^2)^{x+6} = 7^{2x+12}\\). La ecuación queda \\(7^{5x} = 7^{2x+12}\\). Igualando exponentes: \\(5x = 2x + 12 \\Rightarrow 3x = 12 \\Rightarrow x = 4\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(16^{y+6} = 4^{5y}\\)",
+    imagen: "",
+    opciones: [
+        "\\(y = 4\\)",
+        "\\(y = 6\\)",
+        "\\(y = 3\\)",
+        "\\(y = 2\\)"
+    ],
+    respuestaCorrecta: "\\(y = 4\\)",
+    formula: "Expresar ambos lados con la misma base: \\(16 = 4^2\\)",
+    explicacion: "Convirtiendo: \\(16^{y+6} = (4^2)^{y+6} = 4^{2y+12}\\). La ecuación queda \\(4^{2y+12} = 4^{5y}\\). Igualando exponentes: \\(2y + 12 = 5y \\Rightarrow 12 = 3y \\Rightarrow y = 4\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(e^x = 2.4\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 0.87\\)",
+        "\\(x = 0.78\\)",
+        "\\(x = 1.13\\)",
+        "\\(x = 2.40\\)"
+    ],
+    respuestaCorrecta: "\\(x = 0.87\\)",
+    formula: "Si \\(e^x = a\\), entonces \\(x = \\ln(a)\\)",
+    explicacion: "Aplicando logaritmo natural en ambos lados: \\(x = \\ln(2.4)\\). Por lo tanto, \\(x \\approx 0.87\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(e^{4x} = 23\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 0.78\\)",
+        "\\(x = 0.87\\)",
+        "\\(x = 1.78\\)",
+        "\\(x = 4\\)"
+    ],
+    respuestaCorrecta: "\\(x = 0.78\\)",
+    formula: "Si \\(e^u = a\\), entonces \\(u = \\ln(a)\\)",
+    explicacion: "Aplicando logaritmo natural: \\(4x = \\ln(23)\\). Despejando: \\(x = \\dfrac{\\ln(23)}{4}\\). Por lo tanto, \\(x \\approx 0.78\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(e^{3x-8} = 12\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 3.49\\)",
+        "\\(x = 2.49\\)",
+        "\\(x = 4.12\\)",
+        "\\(x = 1.49\\)"
+    ],
+    respuestaCorrecta: "\\(x = 3.49\\)",
+    formula: "Si \\(e^u = a\\), entonces \\(u = \\ln(a)\\)",
+    explicacion: "Aplicando logaritmo natural: \\(3x - 8 = \\ln(12)\\). Despejando: \\(3x = \\ln(12) + 8\\), entonces \\(x = \\dfrac{\\ln(12) + 8}{3}\\). Por lo tanto, \\(x \\approx 3.49\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(2e^{x-2} = 2.3\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 2.14\\)",
+        "\\(x = 2.13\\)",
+        "\\(x = 1.15\\)",
+        "\\(x = 0.13\\)"
+    ],
+    respuestaCorrecta: "\\(x = 2.14\\)",
+    formula: "Si \\(e^u = a\\), entonces \\(u = \\ln(a)\\)",
+    explicacion: "Dividiendo entre 2: \\(e^{x-2} = 1.15\\). Aplicando logaritmo natural: \\(x - 2 = \\ln(1.15)\\). Despejando: \\(x = 2 + \\ln(1.15)\\). Por lo tanto, \\(x \\approx 2.14\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(e^{2x-1} = 14\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 1.82\\)",
+        "\\(x = 1.81\\)",
+        "\\(x = 2.64\\)",
+        "\\(x = 0.82\\)"
+    ],
+    respuestaCorrecta: "\\(x = 1.82\\)",
+    formula: "Si \\(e^u = a\\), entonces \\(u = \\ln(a)\\)",
+    explicacion: "Aplicando logaritmo natural: \\(2x - 1 = \\ln(14)\\). Despejando: \\(2x = \\ln(14) + 1\\), entonces \\(x = \\dfrac{\\ln(14) + 1}{2}\\). Por lo tanto, \\(x \\approx 1.82\\). ✓"
+},
+{
+    pregunta: "Resuelve la ecuación exponencial: \\(e^{x+1} = 7\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 0.95\\)",
+        "\\(x = 1.95\\)",
+        "\\(x = 0.78\\)",
+        "\\(x = 7\\)"
+    ],
+    respuestaCorrecta: "\\(x = 0.95\\)",
+    formula: "Si \\(e^u = a\\), entonces \\(u = \\ln(a)\\)",
+    explicacion: "Aplicando logaritmo natural: \\(x + 1 = \\ln(7)\\). Despejando: \\(x = \\ln(7) - 1\\). Por lo tanto, \\(x \\approx 0.95\\). ✓"
+},
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,5);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
