@@ -241,7 +241,85 @@ const allQuestions = [
     formula: "\\(\\log_b(M)+\\log_b(N)=\\log_b(MN)\\) y \\(1 = \\log_4(4)\\)",
     explicacion: "Se llega a una ecuación de segundo grado en donde se tiene que resolver por formula general"
 },
-    ];
+{
+    pregunta: "Resuelve: \\(\\log_2(3x+1) - \\log_2(x-3) = 3\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 5\\)",
+        "\\(x = 3\\)",
+        "\\(x = 7\\)",
+        "\\(x = 4\\)"
+    ],
+    respuestaCorrecta: "\\(x = 5\\)",
+    formula: "\\(\\log_b M - \\log_b N = \\log_b\\!\\left(\\dfrac{M}{N}\\right)\\) y \\(\\log_b x = n \\Leftrightarrow b^n = x\\)",
+    explicacion: "Aplicando propiedad de cociente: \\(\\log_2\\!\\left(\\dfrac{3x+1}{x-3}\\right) = 3\\). Convirtiendo a forma exponencial: \\(\\dfrac{3x+1}{x-3} = 8\\). Despejando: \\(3x+1 = 8x-24 \\Rightarrow 25 = 5x \\Rightarrow x = 5\\). Verificación: \\(x-3 = 2 > 0\\) ✓"
+},
+{
+    pregunta: "Resuelve: \\(\\log_2(x+1) = 2 + \\log_2(3x-2)\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = \\dfrac{9}{11}\\)",
+        "\\(x = \\dfrac{11}{9}\\)",
+        "\\(x = 3\\)",
+        "\\(x = 1\\)"
+    ],
+    respuestaCorrecta: "\\(x = \\dfrac{9}{11}\\)",
+    formula: "\\(\\log_b M - \\log_b N = \\log_b\\!\\left(\\dfrac{M}{N}\\right)\\) y \\(2 = \\log_2 4\\)",
+    explicacion: "Reordenando: \\(\\log_2(x+1) - \\log_2(3x-2) = 2 \\Rightarrow \\log_2\\!\\left(\\dfrac{x+1}{3x-2}\\right) = 2 \\Rightarrow \\dfrac{x+1}{3x-2} = 4\\). Despejando: \\(x+1 = 12x-8 \\Rightarrow 9 = 11x \\Rightarrow x = \\dfrac{9}{11}\\). Dominio: \\(x+1 = \\frac{20}{11} > 0\\) ✓ y \\(3x-2 = \\frac{5}{11} > 0\\) ✓"
+},
+{
+    pregunta: "Resuelve: \\(\\log_2(x-2) - \\log_2(x-3) = 1\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = 4\\)",
+        "\\(x = 5\\)",
+        "\\(x = 3\\)",
+        "\\(x = 6\\)"
+    ],
+    respuestaCorrecta: "\\(x = 4\\)",
+    formula: "\\(\\log_b M - \\log_b N = \\log_b\\!\\left(\\dfrac{M}{N}\\right)\\)",
+    explicacion: "Aplicando propiedad de cociente: \\(\\log_2\\!\\left(\\dfrac{x-2}{x-3}\\right) = 1 \\Rightarrow \\dfrac{x-2}{x-3} = 2\\). Despejando: \\(x-2 = 2x-6 \\Rightarrow x = 4\\). Dominio: \\(x-2 = 2 > 0\\) y \\(x-3 = 1 > 0\\) ✓"
+},
+{
+    pregunta: "Resuelve: \\(\\log x + \\log 2 = 2\\log 3\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = \\dfrac{9}{2}\\)",
+        "\\(x = 6\\)",
+        "\\(x = 3\\)",
+        "\\(x = \\dfrac{3}{2}\\)"
+    ],
+    respuestaCorrecta: "\\(x = \\dfrac{9}{2}\\)",
+    formula: "\\(\\log M + \\log N = \\log(MN)\\) y \\(n\\log M = \\log(M^n)\\)",
+    explicacion: "Aplicando propiedades: \\(\\log(2x) = \\log(3^2) = \\log 9\\). Como los logaritmos son iguales: \\(2x = 9 \\Rightarrow x = \\dfrac{9}{2}\\). Verificación: \\(x > 0\\) ✓"
+},
+{
+    pregunta: "Resuelve: \\(2\\log(2x+3) = \\log 4 + \\log(x^2+6)\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = \\dfrac{5}{4}\\)",
+        "\\(x = 3\\)",
+        "\\(x = \\dfrac{3}{4}\\)",
+        "\\(x = 2\\)"
+    ],
+    respuestaCorrecta: "\\(x = \\dfrac{5}{4}\\)",
+    formula: "\\(n\\log M = \\log(M^n)\\) y \\(\\log M + \\log N = \\log(MN)\\)",
+    explicacion: "Aplicando propiedades: \\(\\log(2x+3)^2 = \\log[4(x^2+6)]\\). Igualando argumentos: \\(4x^2+12x+9 = 4x^2+24\\). Simplificando: \\(12x = 15 \\Rightarrow x = \\dfrac{5}{4}\\). Verificación: \\(2x+3 = \\frac{11}{2} > 0\\) ✓"
+},
+{
+    pregunta: "Resuelve: \\(\\log_b x + \\log_b(x+2) = 2\\log_b(x-4)\\)",
+    imagen: "",
+    opciones: [
+        "\\(x = \\dfrac{8}{5}\\) (no válida por dominio)",
+        "\\(x = 8\\)",
+        "\\(x = 10\\)",
+        "\\(\\emptyset\\) (sin solución real válida)"
+    ],
+    respuestaCorrecta: "\\(\\emptyset\\) (sin solución real válida)",
+    formula: "\\(\\log_b M + \\log_b N = \\log_b(MN)\\) y \\(n\\log_b M = \\log_b(M^n)\\)",
+    explicacion: "Condensando: \\(\\log_b[x(x+2)] = \\log_b(x-4)^2\\). Igualando: \\(x^2+2x = x^2-8x+16 \\Rightarrow 10x = 16 \\Rightarrow x = \\dfrac{8}{5}\\). Verificando dominio: \\(x-4 = \\dfrac{8}{5}-4 = -\\dfrac{12}{5} < 0\\). El argumento de \\(\\log_b(x-4)\\) es negativo, por tanto \\(x=\\dfrac{8}{5}\\) no es válida. La ecuación no tiene solución real: \\(\\emptyset\\)."
+},
+ ];
 
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
