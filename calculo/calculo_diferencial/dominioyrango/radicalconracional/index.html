@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Dominio y rango de funciones combinadas (Radical y racional)";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "¿Cuál es el dominio de la función \\(f(x)=\\dfrac{\\sqrt{x-3}}{x-5}\\)?",
+    imagen: "",
+    opciones: [
+        "\\([3,+\\infty)\\)",
+        "\\([3,5) \\cup (5,+\\infty)\\)",
+        "\\((3,5) \\cup (5,+\\infty)\\)",
+        "\\([3,+\\infty) \\setminus \\{5\\}\\)"
+    ],
+    respuestaCorrecta: "\\([3,+\\infty) \\setminus \\{5\\}\\)",
+    formula: "Para una raíz cuadrada: el radicando debe ser \\(\\geq 0\\). Además, el denominador no puede ser cero.",
+    explicacion: "Se requiere \\(x-3 \\geq 0\\), por lo tanto \\(x \\geq 3\\). Además, \\(x-5 \\neq 0\\), entonces \\(x \\neq 5\\). Por eso el dominio es \\([3,+\\infty) \\setminus \\{5\\}\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio de \\(f(x)=\\sqrt{\\dfrac{x+2}{x-4}}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\infty,-2] \\cup (4,+\\infty)\\)",
+        "\\([-2,4)\\)",
+        "\\((-\infty,-2] \\cup (4,+\\infty)\\)",
+        "\\([-2,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\infty,-2] \\cup (4,+\\infty)\\)",
+    formula: "En \\(\\sqrt{\\dfrac{a(x)}{b(x)}}\\), la fracción debe ser \\(\\geq 0\\) y el denominador no puede ser cero.",
+    explicacion: "Analizando \\(\\dfrac{x+2}{x-4} \\geq 0\\), los puntos críticos son \\(x=-2\\) y \\(x=4\\). La fracción es positiva o cero en \\((-\infty,-2] \\cup (4,+\\infty)\\). Se excluye \\(x=4\\) porque anula el denominador. ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio de la función \\(f(x)=\\dfrac{1}{\\sqrt{2x-6}}\\)?",
+    imagen: "",
+    opciones: [
+        "\\([3,+\\infty)\\)",
+        "\\((3,+\\infty)\\)",
+        "\\((3,+\\infty)\\)",
+        "\\([3,+\\infty) \\setminus \\{3\\}\\)"
+    ],
+    respuestaCorrecta: "\\((3,+\\infty)\\)",
+    formula: "Si la raíz está en el denominador, el radicando debe ser estrictamente mayor que cero.",
+    explicacion: "Como \\(\\sqrt{2x-6}\\) está en el denominador, se necesita \\(2x-6>0\\). Entonces \\(2x>6\\), por lo tanto \\(x>3\\). El dominio es \\((3,+\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio de \\(f(x)=\\sqrt{\\dfrac{x-1}{x+3}}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\infty,-3) \\cup [1,+\\infty)\\)",
+        "\\([-3,1]\\)",
+        "\\((-\infty,-3) \\cup [1,+\\infty)\\)",
+        "\\([-3,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\infty,-3) \\cup [1,+\\infty)\\)",
+    formula: "El radicando debe cumplir \\(\\dfrac{x-1}{x+3} \\geq 0\\), con \\(x \\neq -3\\).",
+    explicacion: "Los puntos críticos son \\(x=-3\\) y \\(x=1\\). Al analizar signos, la fracción es mayor o igual que cero en \\((-\infty,-3) \\cup [1,+\\infty)\\). Se excluye \\(-3\\) porque anula el denominador. ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio de la función \\(f(x)=\\dfrac{\\sqrt{x+5}}{x-2}\\)?",
+    imagen: "",
+    opciones: [
+        "\\([-5,2) \\cup (2,+\\infty)\\)",
+        "\\([-5,+\\infty)\\)",
+        "\\([-5,2) \\cup (2,+\\infty)\\)",
+        "\\([-5,2]\\)"
+    ],
+    respuestaCorrecta: "\\([-5,2) \\cup (2,+\\infty)\\)",
+    formula: "El radicando debe ser \\(\\geq 0\\) y el denominador no puede ser cero.",
+    explicacion: "Se necesita \\(x+5 \\geq 0\\), entonces \\(x \\geq -5\\). Además, \\(x-2 \\neq 0\\), por lo tanto \\(x \\neq 2\\). El dominio es \\([-5,2) \\cup (2,+\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el dominio de \\(f(x)=\\sqrt{\\dfrac{-2x+10}{x-3}}\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\infty,3) \\cup [5,+\\infty)\\)",
+        "\\((3,5]\\)",
+        "\\((-\infty,3) \\cup [5,+\\infty)\\)",
+        "\\([3,5]\\)"
+    ],
+    respuestaCorrecta: "\\((3,5]\\)",
+    formula: "El radicando debe cumplir \\(\\dfrac{-2x+10}{x-3} \\geq 0\\), con \\(x \\neq 3\\).",
+    explicacion: "Los puntos críticos son \\(x=3\\) y \\(x=5\\). Al analizar signos, la fracción es mayor o igual que cero en \\((3,5]\\). Se excluye \\(3\\) porque anula el denominador y se incluye \\(5\\) porque hace que el radicando sea cero. ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de la función \\(f(x)=\\dfrac{\\sqrt{x}}{x+1}\\) con dominio \\([0,+\\infty)\\)?",
+    imagen: "",
+    opciones: [
+        "\\([0,+\\infty)\\)",
+        "\\((0,+\\infty)\\)",
+        "\\([0,\\dfrac{1}{2}]\\)",
+        "\\((-\infty,0]\\)"
+    ],
+    respuestaCorrecta: "\\([0,\\dfrac{1}{2}]\\)",
+    formula: "Para hallar el rango, se analiza el valor mínimo y máximo de la función en su dominio.",
+    explicacion: "La función es \\(f(x)=\\dfrac{\\sqrt{x}}{x+1}\\). En \\(x=0\\), \\(f(x)=0\\). Su valor máximo ocurre en \\(x=1\\), donde \\(f(1)=\\dfrac{1}{2}\\). Por eso el rango es \\([0,\\dfrac{1}{2}]\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de \\(f(x)=\\dfrac{1}{\\sqrt{x-1}}\\) con dominio \\((1,+\\infty)\\)?",
+    imagen: "",
+    opciones: [
+        "\\([0,+\\infty)\\)",
+        "\\((0,+\\infty)\\)",
+        "\\((0,+\\infty)\\)",
+        "\\([1,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((0,+\\infty)\\)",
+    formula: "Una expresión de la forma \\(\\dfrac{1}{\\sqrt{x-1}}\\) siempre es positiva.",
+    explicacion: "Como \\(x>1\\), entonces \\(\\sqrt{x-1}>0\\). La función nunca vale cero, pero puede acercarse a cero cuando \\(x\\) crece mucho, y puede crecer sin límite cuando \\(x\\) se acerca a 1 por la derecha. El rango es \\((0,+\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de la función \\(f(x)=\\sqrt{\\dfrac{x+2}{x-1}}\\) con dominio \\((-\infty,-2] \\cup (1,+\\infty)\\)?",
+    imagen: "",
+    opciones: [
+        "\\([0,1)\\)",
+        "\\([0,+\\infty)\\)",
+        "\\([0,1) \\cup (1,+\\infty)\\)",
+        "\\((0,1]\\)"
+    ],
+    respuestaCorrecta: "\\([0,1) \\cup (1,+\\infty)\\)",
+    formula: "El rango se obtiene analizando los valores que puede tomar el radicando.",
+    explicacion: "Para \\(x \\leq -2\\), el radicando toma valores desde \\(0\\) hasta valores menores que \\(1\\), dando \\([0,1)\\). Para \\(x>1\\), el radicando toma valores mayores que \\(1\\), dando \\((1,+\\infty)\\). Por eso el rango es \\([0,1) \\cup (1,+\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de \\(f(x)=\\dfrac{\\sqrt{x+3}}{x}\\) con dominio \\([-3,0) \\cup (0,+\\infty)\\)?",
+    imagen: "",
+    opciones: [
+        "\\((-\infty,0)\\)",
+        "\\((0,+\\infty)\\)",
+        "\\((-\infty,+\\infty)\\)",
+        "\\([0,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\infty,+\\infty)\\)",
+    formula: "El rango se analiza considerando cada intervalo del dominio.",
+    explicacion: "En \\([-3,0)\\), la función toma valores desde \\(0\\) hasta valores negativos sin límite. En \\((0,+\\infty)\\), toma valores positivos. Como \\(f(-3)=0\\), también se incluye el cero. Por eso el rango es \\((-\infty,+\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de la función \\(f(x)=\\sqrt{\\dfrac{x}{x+2}}\\) con dominio \\((-\infty,-2) \\cup [0,+\\infty)\\)?",
+    imagen: "",
+    opciones: [
+        "\\([0,1)\\)",
+        "\\([0,+\\infty)\\)",
+        "\\([0,1) \\cup (1,+\\infty)\\)",
+        "\\((0,1]\\)"
+    ],
+    respuestaCorrecta: "\\([0,1) \\cup (1,+\\infty)\\)",
+    formula: "El rango depende de los valores que toma el radicando en cada intervalo del dominio.",
+    explicacion: "Para \\(x \\geq 0\\), el radicando toma valores desde \\(0\\) hasta valores menores que \\(1\\), dando \\([0,1)\\). Para \\(x<-2\\), el radicando toma valores mayores que \\(1\\), dando \\((1,+\\infty)\\). Por eso el rango es \\([0,1) \\cup (1,+\\infty)\\). ✓"
+},
+{
+    pregunta: "¿Cuál es el rango de \\(f(x)=\\dfrac{1}{\\sqrt{-x+5}}\\) con dominio \\((-\infty,5)\\)?",
+    imagen: "",
+    opciones: [
+        "\\((0,+\\infty)\\)",
+        "\\([0,+\\infty)\\)",
+        "\\((0,+\\infty)\\)",
+        "\\([1,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((0,+\\infty)\\)",
+    formula: "Una fracción con numerador positivo y denominador positivo siempre da valores positivos.",
+    explicacion: "Como \\(x<5\\), entonces \\(-x+5>0\\), así que \\(\\sqrt{-x+5}>0\\). La función siempre es positiva, puede crecer sin límite cuando \\(x\\) se acerca a 5 por la izquierda y se acerca a 0 cuando \\(x\\) tiende a \\(-\\infty\\). El rango es \\((0,+\\infty)\\). ✓"
+},
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,5);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
