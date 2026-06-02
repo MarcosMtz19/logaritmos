@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Inecuaciones de primer grado";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{x+2}{x-3} > 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty, -2) \\cup (3, +\\infty)\\)",
+        "\\((-2, 3)\\)",
+        "\\[(-\\infty, -2) \\cup (3, +\\infty)\\)",
+        "\\((-2, +\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty, -2) \\cup (3, +\\infty)\\)",
+    formula: "Tabla de signos: el cociente es positivo cuando numerador y denominador tienen el mismo signo",
+    explicacion: "Puntos críticos: \\(x=-2\\) (numerador=0) y \\(x=3\\) (denominador=0). Tabla de signos: en \\((-\\infty,-2)\\): \\((-)/(-)=+\\) ✓; en \\((-2,3)\\): \\((+)/(-)=-\\); en \\((3,+\\infty)\\): \\((+)/(+)=+\\) ✓. Solución: \\((-\\infty,-2)\\cup(3,+\\infty)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{2x-5}{x+1} < 0\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\left(-1,\\ \\dfrac{5}{2}\\right)\\)",
+        "\\(\\left(-\\infty,-1\\right) \\cup \\left[\\dfrac{5}{2},+\\infty\\right)\\)",
+        "\\(\\left[-1,\\ \\dfrac{5}{2}\\right]\\)",
+        "\\(\\left(-\\infty,-1\\right) \\cup \\left(\\dfrac{5}{2},+\\infty\\right)\\)"
+    ],
+    respuestaCorrecta: "\\(\\left(-1,\\ \\dfrac{5}{2}\\right)\\)",
+    formula: "El cociente es negativo cuando numerador y denominador tienen signos opuestos",
+    explicacion: "Puntos críticos: \\(x=-1\\) (denominador=0) y \\(x=\\frac{5}{2}\\) (numerador=0). Tabla: en \\((-\\infty,-1)\\): \\((-)/(-)=+\\); en \\((-1,\\frac{5}{2})\\): \\((-)/( +)=-\\) ✓; en \\((\\frac{5}{2},+\\infty)\\): \\((+)/(+)=+\\). Desigualdad estricta: se excluyen ambos extremos. Solución: \\(\\left(-1,\\frac{5}{2}\\right)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{3x-6}{2x+4} < 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-2, 2)\\)",
+        "\\((-\\infty,-2) \\cup (2,+\\infty)\\)",
+        "\\([-2, 2)\\)",
+        "\\([-2, 2]\\)"
+    ],
+    respuestaCorrecta: "\\((-2, 2)\\)",
+    formula: "Simplificar: \\(\\dfrac{3(x-2)}{2(x+2)} < 0\\)",
+    explicacion: "Factorizando: \\(\\dfrac{3(x-2)}{2(x+2)} < 0\\). Puntos críticos: \\(x=-2\\) y \\(x=2\\). Tabla: en \\((-\\infty,-2)\\): \\((-)/(-)=+\\); en \\((-2,2)\\): \\((-)/( +)=-\\) ✓; en \\((2,+\\infty)\\): \\((+)/(+)=+\\). Solución: \\((-2,2)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{x-1}{x^2-4} > 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-2,1) \\cup (2,+\\infty)\\)",
+        "\\((-\\infty,-2) \\cup (1,2)\\)",
+        "\\((-2,1) \\cup (2,+\\infty)\\)",
+        "\\((-\\infty,-2) \\cup (2,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-2,1) \\cup (2,+\\infty)\\)",
+    formula: "Factorizar: \\(x^2-4=(x-2)(x+2)\\)",
+    explicacion: "\\(\\dfrac{x-1}{(x-2)(x+2)} > 0\\). Puntos críticos: \\(-2, 1, 2\\). Tabla de signos por intervalos: \\((-\\infty,-2)\\): \\(-\\); \\((-2,1)\\): \\(+\\) ✓; \\((1,2)\\): \\(-\\); \\((2,+\\infty)\\): \\(+\\) ✓. Solución: \\((-2,1)\\cup(2,+\\infty)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{x+3}{x^2-9} \\leq 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty,-3) \\cup (-3,3)\\)",
+        "\\((-3,3)\\)",
+        "\\((-\\infty,-3) \\cup [-3,3]\\)",
+        "\\([-3,3]\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty,-3) \\cup (-3,3)\\)",
+    formula: "Simplificar: \\(\\dfrac{x+3}{(x-3)(x+3)} = \\dfrac{1}{x-3}\\) para \\(x\\neq -3\\)",
+    explicacion: "Factorizando: \\(\\dfrac{x+3}{(x+3)(x-3)} = \\dfrac{1}{x-3}\\) (para \\(x\\neq-3\\)). La expresión es \\(\\leq 0\\) cuando \\(x-3<0\\), es decir \\(x<3\\), excluyendo \\(x=3\\) y \\(x=-3\\). Solución: \\((-\\infty,-3)\\cup(-3,3)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{2x-4}{x^2-1} < 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty,-1) \\cup (1,2)\\)",
+        "\\((-1,1) \\cup (2,+\\infty)\\)",
+        "\\((-\\infty,-1) \\cup (1,2]\\)",
+        "\\((-1,2)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty,-1) \\cup (1,2)\\)",
+    formula: "Factorizar: \\(\\dfrac{2(x-2)}{(x-1)(x+1)} < 0\\)",
+    explicacion: "Puntos críticos: \\(-1, 1, 2\\). Tabla: \\((-\\infty,-1)\\): \\(-\\) ✓; \\((-1,1)\\): \\(+\\); \\((1,2)\\): \\(-\\) ✓; \\((2,+\\infty)\\): \\(+\\). Solución: \\((-\\infty,-1)\\cup(1,2)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{x^2-4}{x-1} > 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-2,1) \\cup (2,+\\infty)\\)",
+        "\\((-\\infty,-2) \\cup (1,2)\\)",
+        "\\((-2,1] \\cup [2,+\\infty)\\)",
+        "\\((-\\infty,-2) \\cup (2,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-2,1) \\cup (2,+\\infty)\\)",
+    formula: "Factorizar: \\(\\dfrac{(x-2)(x+2)}{x-1} > 0\\)",
+    explicacion: "Puntos críticos: \\(-2, 1, 2\\). Tabla: \\((-\\infty,-2)\\): \\(-\\); \\((-2,1)\\): \\(+\\) ✓; \\((1,2)\\): \\(-\\); \\((2,+\\infty)\\): \\(+\\) ✓. Solución: \\((-2,1)\\cup(2,+\\infty)\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{x^2-1}{x+2} \\leq 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty,-2) \\cup [-1,1]\\)",
+        "\\((-2,-1] \\cup [1,+\\infty)\\)",
+        "\\((-\\infty,-2) \\cup (-1,1)\\)",
+        "\\([-2,-1] \\cup [1,+\\infty)\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty,-2) \\cup [-1,1]\\)",
+    formula: "Factorizar: \\(\\dfrac{(x-1)(x+1)}{x+2} \\leq 0\\)",
+    explicacion: "Puntos críticos: \\(-2\\) (excluido), \\(-1\\) y \\(1\\) (incluidos). Tabla: \\((-\\infty,-2)\\): \\(-\\) ✓; \\((-2,-1)\\): \\(+\\); \\((-1,1)\\): \\(-\\) ✓; \\((1,+\\infty)\\): \\(+\\). Incluyendo \\(x=-1\\) y \\(x=1\\) (anulan numerador): solución \\((-\\infty,-2)\\cup[-1,1]\\)."
+},
+{
+    pregunta: "Resuelve la desigualdad: \\(\\dfrac{x^2-9}{2x-6} < 0\\)",
+    imagen: "",
+    opciones: [
+        "\\((-\\infty,-3)\\)",
+        "\\((-3,3)\\)",
+        "\\([-\\infty,-3)\\)",
+        "\\([-3,3]\\)"
+    ],
+    respuestaCorrecta: "\\((-\\infty,-3)\\)",
+    formula: "Simplificar: \\(\\dfrac{(x-3)(x+3)}{2(x-3)} = \\dfrac{x+3}{2}\\) para \\(x\\neq 3\\)",
+    explicacion: "Factorizando: \\(\\dfrac{(x+3)(x-3)}{2(x-3)} = \\dfrac{x+3}{2}\\) (para \\(x\\neq3\\)). La expresión es \\(< 0\\) cuando \\(x+3<0\\), es decir \\(x<-3\\). Solución: \\((-\\infty,-3)\\). El intervalo \\((-3,3)\\) es incorrecto."
+},
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,6);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
