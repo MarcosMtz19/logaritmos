@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:80%;
+    max-width:600px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Rectas paralelas cortadas por una secante";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+    {
+        pregunta: "¿Cuál es el valor de x de la siguiente figura?",
+        imagen: "https://i.imgur.com/KGYhgh4.png",
+        opciones: [
+            "\\(x=65°\\)",
+            "\\(x=6.5°\\)",
+            "\\(x=56°\\)"
+        ],
+        respuestaCorrecta: "\\(x=65°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximamente."
+    },
+    {
+        pregunta: "¿Cuál es el valor de 'a'  de la siguiente figura?",
+        imagen: "https://i.imgur.com/KGYhgh4.png",
+        opciones: [
+            "\\(a=115°\\)",
+            "\\(a=150°\\)",
+            "\\(a=151°\\)"
+        ],
+        respuestaCorrecta: "\\(a=115°\\)",
+        formula: "N/A",
+        explicacion: "Dispomible proximamente"
+    },
+    {
+        pregunta: "De  la siguiente figura ¿cuál es el valor de x-y ?",
+        imagen: "https://i.imgur.com/SCR9bXG.png",
+        opciones: [
+            "\\(x-y=110°\\)",
+            "\\(x-y=150°\\)",
+            "\\(x-y=151°\\)"
+        ],
+        respuestaCorrecta: "\\(x-y=110°\\)",
+        formula: "N/A",
+        explicacion: "Dispomible proximamente"
+    },
+    {
+        pregunta: "Dada la siguiente figura, ¿Cuál es el valor de la expresión 3x-20 ?",
+        imagen: "https://i.imgur.com/ucPdiLK.png",
+        opciones: [
+            "\\(3x-20=100°\\)",
+            "\\(3x-20=120°\\)",
+            "\\(3x-20=80°\\)"
+        ],
+        respuestaCorrecta: "\\(3x-20=100°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximámente"
+    },
+    {
+        pregunta: "Dada la siguiente figura, el ángulo 'a' y el ángulo 'e' son: ",
+        imagen: "https://i.imgur.com/ucPdiLK.png",
+        opciones: [
+            "ánglos correspondientes",
+            "ánglos opuestos por un vértice",
+            "ánglos alternos internos"
+        ],
+        respuestaCorrecta: "ánglos correspondientes",
+        formula: "N/A",
+        explicacion: `
+                <p> Si Quieres ver la explicación, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid02679jJyShUXR62JDsd4Rf6kuJc7QEUoXfDk1xw6ckLAuhkrvrNFhWedtnrHgctzmYl%26id%3D100079792827912&show_text=true&width=500" width="500" height="391" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+            `
+    },
+    {
+        pregunta: "Los ángulos 'x' y '2x-15°' de la siguiente figura son:  ",
+        imagen: "https://i.imgur.com/KGYhgh4.png",
+        opciones: [
+            "ánglos colaterales externos",
+            "ánglos colaterales internos",
+            "ánglos alternos internos"
+        ],
+        respuestaCorrecta: "ánglos colaterales externos",
+        formula: "N/A",
+        explicacion: `
+                <p> Si Quieres ver la explicación, aquí está:</p>
+                <div style="display:flex;justify-content:center;">
+                <iframe src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid0rC66PFxCpoAJYnybXKEUuYF6XYrj8dFaJGyGhN92DJFVkvFxbPDgf5G4bYnvGg15l%26id%3D100079792827912&show_text=true&width=500" width="500" height="392" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+            `
+    },
+    {
+        pregunta: "La suma de \\(2y+110°\\) de la siguiente figura, debe ser iguala a:",
+        imagen: "https://i.imgur.com/SCR9bXG.png",
+        opciones: [
+            "\\(180°\\)",
+            "\\(360°\\)",
+            "\\(90°\\)"
+        ],
+        respuestaCorrecta: "\\(180°\\)",
+        formula: "N/A",
+        explicacion: "Recuerda que los ángulos suplementarios son aquellos cuya suma es igual a 180 grados."
+    },
+    {
+        pregunta: "Dada la siguiente figura, ¿Cuál es el valor de la expresión 'x' ?",
+        imagen: "https://i.imgur.com/wReunod.png",
+        opciones: [
+            "\\(50°\\)",
+            "\\(40°\\)",
+            "\\(60°\\)"
+        ],
+        respuestaCorrecta: "\\(50°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximámente"
+    },
+    {
+        pregunta: "Dada la siguiente figura, ¿Cuál es el valor de la expresión 'x' ?",
+        imagen: "https://i.imgur.com/HvZmCfo.png",
+        opciones: [
+            "\\(20°\\)",
+            "\\(40°\\)",
+            "\\(60°\\)"
+        ],
+        respuestaCorrecta: "\\(20°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximámente"
+    },
+        {
+        pregunta: "Resuelve",
+        imagen: "https://i.imgur.com/Vf0ta8g.png",
+        opciones: [
+            "\\(50°\\)",
+            "\\(40°\\)",
+            "\\(60°\\)"
+        ],
+        respuestaCorrecta: "\\(50°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximámente"
+    },
+    {
+        pregunta: "Dada la siguiente figura, ¿Cuál es el valor de la expresión 'x' ?",
+        imagen: "https://i.imgur.com/Vf0ta8g.png",
+        opciones: [
+            "\\(42°\\)",
+            "\\(40°\\)",
+            "\\(60°\\)"
+        ],
+        respuestaCorrecta: "\\(42°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximámente"
+    },
+    {
+        pregunta: "Dada la siguiente figura, ¿Cuál es el valor de la expresión 'x' ?",
+        imagen: "https://i.imgur.com/fDxwXcT.png",
+        opciones: [
+            "\\(42°\\)",
+            "\\(50°\\)",
+            "\\(60°\\)"
+        ],
+        respuestaCorrecta: "\\(50°\\)",
+        formula: "N/A",
+        explicacion: "Disponible proximámente"
+    },
+    
+    
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,6);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
