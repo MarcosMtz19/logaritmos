@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Razones trigonométricas en el plano cartesiano";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+    {
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\alpha\\), si se encuentra en el tercer cuadrante con \\(\\csc \\alpha = -\\dfrac{3}{2}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\sin \\alpha = -\\dfrac{2}{3},\\ \\cos \\alpha = \\dfrac{\\sqrt{5}}{3},\\ \\tan \\alpha = -\\dfrac{2\\sqrt{5}}{5}\\)",
+        "\\(\\sin \\alpha = -\\dfrac{2}{3},\\ \\cos \\alpha = -\\dfrac{\\sqrt{5}}{3},\\ \\tan \\alpha = \\dfrac{2\\sqrt{5}}{5}\\)",
+        "\\(\\sin \\alpha = \\dfrac{2}{3},\\ \\cos \\alpha = -\\dfrac{\\sqrt{5}}{3},\\ \\tan \\alpha = -\\dfrac{2\\sqrt{5}}{5}\\)",
+        "\\(\\sin \\alpha = -\\dfrac{2}{3},\\ \\cos \\alpha = \\dfrac{\\sqrt{5}}{3},\\ \\tan \\alpha = \\dfrac{2\\sqrt{5}}{5}\\)"
+    ],
+    respuestaCorrecta: "\\(\\sin \\alpha = -\\dfrac{2}{3},\\ \\cos \\alpha = -\\dfrac{\\sqrt{5}}{3},\\ \\tan \\alpha = \\dfrac{2\\sqrt{5}}{5}\\)",
+    formula: "\\(\\csc \\alpha = \\dfrac{1}{\\sin \\alpha}\\)",
+    explicacion: "Como \\(\\csc \\alpha = -\\dfrac{3}{2}\\), entonces \\(\\sin \\alpha = -\\dfrac{2}{3}\\). En el tercer cuadrante, seno y coseno son negativos, y tangente es positiva. Por identidad pitagórica, \\(\\cos \\alpha = -\\dfrac{\\sqrt{5}}{3}\\), y \\(\\tan \\alpha = \\dfrac{\\sin \\alpha}{\\cos \\alpha}=\\dfrac{2\\sqrt{5}}{5}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\beta\\), si se encuentra en el segundo cuadrante con \\(\\sec \\beta = -2\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\cos \\beta = -\\dfrac{1}{2},\\ \\sin \\beta = \\dfrac{\\sqrt{3}}{2},\\ \\tan \\beta = -\\sqrt{3}\\)",
+        "\\(\\cos \\beta = -\\dfrac{1}{2},\\ \\sin \\beta = \\dfrac{\\sqrt{3}}{2},\\ \\tan \\beta = -\\sqrt{3}\\)",
+        "\\(\\cos \\beta = \\dfrac{1}{2},\\ \\sin \\beta = \\dfrac{\\sqrt{3}}{2},\\ \\tan \\beta = \\sqrt{3}\\)",
+        "\\(\\cos \\beta = -\\dfrac{1}{2},\\ \\sin \\beta = -\\dfrac{\\sqrt{3}}{2},\\ \\tan \\beta = \\sqrt{3}\\)"
+    ],
+    respuestaCorrecta: "\\(\\cos \\beta = -\\dfrac{1}{2},\\ \\sin \\beta = \\dfrac{\\sqrt{3}}{2},\\ \\tan \\beta = -\\sqrt{3}\\)",
+    formula: "\\(\\sec \\beta = \\dfrac{1}{\\cos \\beta}\\)",
+    explicacion: "Como \\(\\sec \\beta = -2\\), entonces \\(\\cos \\beta = -\\dfrac{1}{2}\\). En el segundo cuadrante, seno es positivo, coseno negativo y tangente negativa. Por eso \\(\\sin \\beta = \\dfrac{\\sqrt{3}}{2}\\) y \\(\\tan \\beta = -\\sqrt{3}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\gamma\\), si se encuentra en el cuarto cuadrante con \\(\\tan \\gamma = -\\dfrac{3}{4}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\sin \\gamma = \\dfrac{3}{5},\\ \\cos \\gamma = \\dfrac{4}{5},\\ \\csc \\gamma = \\dfrac{5}{3}\\)",
+        "\\(\\sin \\gamma = -\\dfrac{3}{5},\\ \\cos \\gamma = -\\dfrac{4}{5},\\ \\csc \\gamma = -\\dfrac{5}{3}\\)",
+        "\\(\\sin \\gamma = -\\dfrac{3}{5},\\ \\cos \\gamma = \\dfrac{4}{5},\\ \\csc \\gamma = -\\dfrac{5}{3}\\)",
+        "\\(\\sin \\gamma = \\dfrac{3}{5},\\ \\cos \\gamma = -\\dfrac{4}{5},\\ \\csc \\gamma = \\dfrac{5}{3}\\)"
+    ],
+    respuestaCorrecta: "\\(\\sin \\gamma = -\\dfrac{3}{5},\\ \\cos \\gamma = \\dfrac{4}{5},\\ \\csc \\gamma = -\\dfrac{5}{3}\\)",
+    formula: "\\(\\tan \\gamma = \\dfrac{\\sin \\gamma}{\\cos \\gamma}\\)",
+    explicacion: "Como \\(\\tan \\gamma = -\\dfrac{3}{4}\\), usamos el triángulo 3-4-5. En el cuarto cuadrante, seno es negativo y coseno positivo. Entonces \\(\\sin \\gamma = -\\dfrac{3}{5}\\), \\(\\cos \\gamma = \\dfrac{4}{5}\\) y \\(\\csc \\gamma = -\\dfrac{5}{3}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\theta\\), si se encuentra en el primer cuadrante con \\(\\sin \\theta = \\dfrac{5}{13}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\cos \\theta = -\\dfrac{12}{13},\\ \\tan \\theta = -\\dfrac{5}{12},\\ \\sec \\theta = -\\dfrac{13}{12}\\)",
+        "\\(\\cos \\theta = \\dfrac{12}{13},\\ \\tan \\theta = -\\dfrac{5}{12},\\ \\sec \\theta = \\dfrac{13}{12}\\)",
+        "\\(\\cos \\theta = \\dfrac{12}{13},\\ \\tan \\theta = \\dfrac{5}{12},\\ \\sec \\theta = \\dfrac{13}{12}\\)",
+        "\\(\\cos \\theta = -\\dfrac{12}{13},\\ \\tan \\theta = \\dfrac{5}{12},\\ \\sec \\theta = -\\dfrac{13}{12}\\)"
+    ],
+    respuestaCorrecta: "\\(\\cos \\theta = \\dfrac{12}{13},\\ \\tan \\theta = \\dfrac{5}{12},\\ \\sec \\theta = \\dfrac{13}{12}\\)",
+    formula: "\\(\\sin^2 \\theta + \\cos^2 \\theta = 1\\)",
+    explicacion: "Como \\(\\sin \\theta = \\dfrac{5}{13}\\), el triángulo asociado es 5-12-13. En el primer cuadrante todas las funciones son positivas. Por eso \\(\\cos \\theta = \\dfrac{12}{13}\\), \\(\\tan \\theta = \\dfrac{5}{12}\\) y \\(\\sec \\theta = \\dfrac{13}{12}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\delta\\), si se encuentra en el segundo cuadrante con \\(\\cot \\delta = -\\dfrac{4}{3}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\sin \\delta = \\dfrac{3}{5},\\ \\cos \\delta = -\\dfrac{4}{5},\\ \\tan \\delta = -\\dfrac{3}{4}\\)",
+        "\\(\\sin \\delta = \\dfrac{3}{5},\\ \\cos \\delta = -\\dfrac{4}{5},\\ \\tan \\delta = -\\dfrac{3}{4}\\)",
+        "\\(\\sin \\delta = -\\dfrac{3}{5},\\ \\cos \\delta = \\dfrac{4}{5},\\ \\tan \\delta = \\dfrac{3}{4}\\)",
+        "\\(\\sin \\delta = \\dfrac{3}{5},\\ \\cos \\delta = \\dfrac{4}{5},\\ \\tan \\delta = \\dfrac{3}{4}\\)"
+    ],
+    respuestaCorrecta: "\\(\\sin \\delta = \\dfrac{3}{5},\\ \\cos \\delta = -\\dfrac{4}{5},\\ \\tan \\delta = -\\dfrac{3}{4}\\)",
+    formula: "\\(\\cot \\delta = \\dfrac{\\cos \\delta}{\\sin \\delta}\\)",
+    explicacion: "Como \\(\\cot \\delta = -\\dfrac{4}{3}\\), usamos el triángulo 3-4-5. En el segundo cuadrante, seno es positivo, coseno negativo y tangente negativa. Entonces \\(\\sin \\delta = \\dfrac{3}{5}\\), \\(\\cos \\delta = -\\dfrac{4}{5}\\) y \\(\\tan \\delta = -\\dfrac{3}{4}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\varphi\\), si se encuentra en el tercer cuadrante con \\(\\tan \\varphi = \\dfrac{1}{2}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\sin \\varphi = \\dfrac{1}{\\sqrt{5}},\\ \\cos \\varphi = \\dfrac{2}{\\sqrt{5}},\\ \\csc \\varphi = \\sqrt{5}\\)",
+        "\\(\\sin \\varphi = -\\dfrac{1}{\\sqrt{5}},\\ \\cos \\varphi = \\dfrac{2}{\\sqrt{5}},\\ \\csc \\varphi = -\\sqrt{5}\\)",
+        "\\(\\sin \\varphi = -\\dfrac{\\sqrt{5}}{5},\\ \\cos \\varphi = -\\dfrac{2\\sqrt{5}}{5},\\ \\csc \\varphi = -\\sqrt{5}\\)",
+        "\\(\\sin \\varphi = \\dfrac{\\sqrt{5}}{5},\\ \\cos \\varphi = \\dfrac{2\\sqrt{5}}{5},\\ \\csc \\varphi = \\sqrt{5}\\)"
+    ],
+    respuestaCorrecta: "\\(\\sin \\varphi = -\\dfrac{\\sqrt{5}}{5},\\ \\cos \\varphi = -\\dfrac{2\\sqrt{5}}{5},\\ \\csc \\varphi = -\\sqrt{5}\\)",
+    formula: "\\(\\tan \\varphi = \\dfrac{\\sin \\varphi}{\\cos \\varphi}\\)",
+    explicacion: "Como \\(\\tan \\varphi = \\dfrac{1}{2}\\), usamos un triángulo con catetos 1 y 2, e hipotenusa \\(\\sqrt{5}\\). En el tercer cuadrante, seno y coseno son negativos. Entonces \\(\\sin \\varphi = -\\dfrac{\\sqrt{5}}{5}\\), \\(\\cos \\varphi = -\\dfrac{2\\sqrt{5}}{5}\\) y \\(\\csc \\varphi = -\\sqrt{5}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\omega\\), si se encuentra en el cuarto cuadrante con \\(\\cos \\omega = \\dfrac{3}{5}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\sin \\omega = \\dfrac{4}{5},\\ \\tan \\omega = \\dfrac{4}{3},\\ \\csc \\omega = \\dfrac{5}{4}\\)",
+        "\\(\\sin \\omega = -\\dfrac{4}{5},\\ \\tan \\omega = -\\dfrac{4}{3},\\ \\csc \\omega = -\\dfrac{5}{4}\\)",
+        "\\(\\sin \\omega = -\\dfrac{4}{5},\\ \\tan \\omega = -\\dfrac{4}{3},\\ \\csc \\omega = -\\dfrac{5}{4}\\)",
+        "\\(\\sin \\omega = \\dfrac{4}{5},\\ \\tan \\omega = -\\dfrac{4}{3},\\ \\csc \\omega = \\dfrac{5}{4}\\)"
+    ],
+    respuestaCorrecta: "\\(\\sin \\omega = -\\dfrac{4}{5},\\ \\tan \\omega = -\\dfrac{4}{3},\\ \\csc \\omega = -\\dfrac{5}{4}\\)",
+    formula: "\\(\\sin^2 \\omega + \\cos^2 \\omega = 1\\)",
+    explicacion: "Como \\(\\cos \\omega = \\dfrac{3}{5}\\), el triángulo asociado es 3-4-5. En el cuarto cuadrante, coseno es positivo y seno es negativo. Entonces \\(\\sin \\omega = -\\dfrac{4}{5}\\), \\(\\tan \\omega = -\\dfrac{4}{3}\\) y \\(\\csc \\omega = -\\dfrac{5}{4}\\). ✓"
+},
+{
+    pregunta: "Calcula las funciones trigonométricas del ángulo \\(\\psi\\), si se encuentra en el primer cuadrante con \\(\\cot \\psi = \\dfrac{7}{24}\\)",
+    imagen: "",
+    opciones: [
+        "\\(\\sin \\psi = -\\dfrac{24}{25},\\ \\cos \\psi = -\\dfrac{7}{25},\\ \\tan \\psi = \\dfrac{24}{7}\\)",
+        "\\(\\sin \\psi = \\dfrac{24}{25},\\ \\cos \\psi = -\\dfrac{7}{25},\\ \\tan \\psi = -\\dfrac{24}{7}\\)",
+        "\\(\\sin \\psi = \\dfrac{24}{25},\\ \\cos \\psi = \\dfrac{7}{25},\\ \\tan \\psi = \\dfrac{24}{7}\\)",
+        "\\(\\sin \\psi = -\\dfrac{24}{25},\\ \\cos \\psi = \\dfrac{7}{25},\\ \\tan \\psi = -\\dfrac{24}{7}\\)"
+    ],
+    respuestaCorrecta: "\\(\\sin \\psi = \\dfrac{24}{25},\\ \\cos \\psi = \\dfrac{7}{25},\\ \\tan \\psi = \\dfrac{24}{7}\\)",
+    formula: "\\(\\cot \\psi = \\dfrac{\\cos \\psi}{\\sin \\psi}\\)",
+    explicacion: "Como \\(\\cot \\psi = \\dfrac{7}{24}\\), usamos el triángulo 7-24-25. En el primer cuadrante todas las funciones son positivas. Entonces \\(\\sin \\psi = \\dfrac{24}{25}\\), \\(\\cos \\psi = \\dfrac{7}{25}\\) y \\(\\tan \\psi = \\dfrac{24}{7}\\). ✓"
+},
+    
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,5);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
