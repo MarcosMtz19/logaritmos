@@ -1,0 +1,159 @@
+<style>
+  body {
+    background: #ccffcc;
+    font-size: 18px;
+  }
+
+  #formulario-alumno {
+    width: 95%;
+    max-width: 700px;
+    margin: 50px auto;
+    text-align: center;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+  }
+
+  #formulario-alumno input,
+  #formulario-alumno select {
+    width: 90%;
+    max-width: 500px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 18px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #e9ffe9;
+  }
+
+  #formulario-alumno input:focus,
+  #formulario-alumno select:focus {
+    outline: none;
+    background: #d0ffd0;
+    border-color: #99cc99;
+  }
+
+  #formulario-alumno button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  #mensaje {
+    color: #664d03;
+    font-size: 18px;
+  }
+
+  #contenido-genially {
+    display: none;
+  }
+</style>
+
+<div id="formulario-alumno">
+  <h2>Ingresa tus datos</h2>
+
+  <input
+    id="nombre"
+    type="text"
+    placeholder="Primer nombre"
+    required
+    style="text-transform: uppercase;"
+    oninput="
+      this.value = this.value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z\s]/g, '')
+        .toUpperCase();
+    "
+  >
+
+  <input
+    id="apellido"
+    type="text"
+    placeholder="Primer apellido"
+    required
+    style="text-transform: uppercase;"
+    oninput="
+      this.value = this.value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z\s]/g, '')
+        .toUpperCase();
+    "
+  >
+
+  <select id="cecyt" required>
+    <option value="">Selecciona tu CECyT</option>
+    <option value="CECyT 1">CECyT 1</option>
+    <option value="CECyT 2">CECyT 2</option>
+    <option value="CECyT 3">CECyT 3</option>
+    <option value="CECyT 4">CECyT 4</option>
+    <option value="CECyT 5">CECyT 5</option>
+    <option value="CECyT 6">CECyT 6</option>
+    <option value="CECyT 7">CECyT 7</option>
+    <option value="CECyT 8">CECyT 8</option>
+    <option value="CECyT 9">CECyT 9</option>
+    <option value="CECyT 10">CECyT 10</option>
+    <option value="CECyT 11">CECyT 11</option>
+    <option value="CECyT 12">CECyT 12</option>
+    <option value="CECyT 13">CECyT 13</option>
+    <option value="CECyT 14">CECyT 14</option>
+    <option value="CECyT 15">CECyT 15</option>
+    <option value="CECyT 16">CECyT 16</option>
+    <option value="CECyT 17">CECyT 17</option>
+    <option value="CECyT 18">CECyT 18</option>
+    <option value="CECyT 19">CECyT 19</option>
+    <option value="Otra escuela">Otra escuela</option>
+  </select>
+
+  <br>
+
+  <button onclick="guardarAlumno()">Ingresar</button>
+
+  <p id="mensaje"></p>
+</div>
+
+<div id="contenido-genially">
+  <div style="width: 100%;">
+    <div style="position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;">
+      <iframe
+        title="Geometría y trigonometría/Parcial 3"
+        frameborder="0"
+        width="1200"
+        height="675"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+        src="https://view.genially.com/6a04b74a4ca508343cc368b8"
+        type="text/html"
+        allowscriptaccess="always"
+        allowfullscreen="true"
+        scrolling="yes"
+        allownetworking="all"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  const GOOGLE_SCRIPT_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+
+  let nombreAlumno = "";
+  let apellidoAlumno = "";
+  let cecytAlumno = "";
+  let inicioActivo = null;
+  let tiempoActivoTotal = 0;
+  let intervaloGuardado = null;
+  let sessionId = Date.now().toString() + Math.random().toString(36).substring(2);
+
+  function iniciarConteoActivo() {
+    if (inicioActivo === null) {
+      inicioActivo = Date.now();
+    }
+  }
+
+  function pausarConteoActivo() {
+    if (inicioActivo !== null) {
+      tiempoActivoTotal += Date.now() - inicioActivo;
+      inicioActivo = null
