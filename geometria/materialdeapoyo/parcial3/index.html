@@ -156,4 +156,92 @@
   function pausarConteoActivo() {
     if (inicioActivo !== null) {
       tiempoActivoTotal += Date.now() - inicioActivo;
-      inicioActivo = null
+      inicioActivo = null;
+    }
+  }
+
+  function obtenerTiempoActivo() {
+    let total = tiempoActivoTotal;
+
+    if (inicioActivo !== null) {
+      total += Date.now() - inicioActivo;
+    }
+
+    const segundos = Math.floor(total / 1000);
+    const minutos = Math.floor(segundos / 60);
+    const segundosRestantes = segundos % 60;
+
+    return minutos + " min " + segundosRestantes + " seg";
+  }
+
+  function enviarTiempoActivo() {
+    if (!nombreAlumno || !apellidoAlumno || !cecytAlumno) {
+      return;
+    }
+
+    const datos = {
+      sessionId: sessionId,
+      nombre: nombreAlumno,
+      apellido: apellidoAlumno,
+      cecyt: cecytAlumno,
+      test: "Geometría y trigonometría/Parcial 3",
+      tiempoActivo: obtenerTiempoActivo()
+    };
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify(datos)
+    });
+  }
+
+  function guardarAlumno() {
+    const nombre = document.getElementById("nombre").value.trim();
+    const apellido = document.getElementById("apellido").value.trim();
+    const cecyt = document.getElementById("cecyt").value.trim();
+    const mensaje = document.getElementById("mensaje");
+
+    if (!nombre || !apellido || !cecyt) {
+      mensaje.textContent = "Completa todos los campos.";
+      return;
+    }
+
+    nombreAlumno = nombre;
+    apellidoAlumno = apellido;
+    cecytAlumno = cecyt;
+
+    mensaje.textContent = "Guardando datos...";
+
+    document.getElementById("formulario-alumno").style.display = "none";
+    document.getElementById("contenido-genially").style.display = "block";
+
+    iniciarConteoActivo();
+
+    enviarTiempoActivo();
+
+    intervaloGuardado = setInterval(function () {
+      enviarTiempoActivo();
+    }, 15000);
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!nombreAlumno) {
+      return;
+    }
+
+    if (document.hidden) {
+      pausarConteoActivo();
+      enviarTiempoActivo();
+    } else {
+      iniciarConteoActivo();
+    }
+  });
+
+  window.addEventListener("beforeunload", function () {
+    pausarConteoActivo();
+    enviarTiempoActivo();
+  });
+</script>
