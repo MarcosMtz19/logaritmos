@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Productos Notables";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "Desarrolla \\((x + 5)^2\\)",
+    imagen: "",
+    opciones: [
+        "\\(x^2 + 5x + 25\\)",
+        "\\(x^2 + 10x + 25\\)",
+        "\\(x^2 + 25\\)"
+    ],
+    respuestaCorrecta: "\\(x^2 + 10x + 25\\)",
+    formula: "\\((a+b)^2 = a^2 + 2ab + b^2\\)",
+    explicacion: "Aplicando la fórmula: \\((x+5)^2 = x^2 + 2(x)(5) + 5^2 = x^2 + 10x + 25\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((3a - 4b)^2\\)",
+    imagen: "",
+    opciones: [
+        "\\(9a^2 - 16b^2\\)",
+        "\\(9a^2 + 24ab + 16b^2\\)",
+        "\\(9a^2 - 24ab + 16b^2\\)"
+    ],
+    respuestaCorrecta: "\\(9a^2 - 24ab + 16b^2\\)",
+    formula: "\\((a-b)^2 = a^2 - 2ab + b^2\\)",
+    explicacion: "Aplicando la fórmula: \\((3a-4b)^2 = (3a)^2 - 2(3a)(4b) + (4b)^2 = 9a^2 - 24ab + 16b^2\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((2x + 7)^2\\)",
+    imagen: "",
+    opciones: [
+        "\\(4x^2 + 14x + 49\\)",
+        "\\(4x^2 + 49\\)",
+        "\\(4x^2 + 28x + 49\\)"
+    ],
+    respuestaCorrecta: "\\(4x^2 + 28x + 49\\)",
+    formula: "\\((a+b)^2 = a^2 + 2ab + b^2\\)",
+    explicacion: "Aplicando la fórmula: \\((2x+7)^2 = (2x)^2 + 2(2x)(7) + 7^2 = 4x^2 + 28x + 49\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((x + 6)(x - 6)\\)",
+    imagen: "",
+    opciones: [
+        "\\(x^2 + 36\\)",
+        "\\(x^2 - 12x + 36\\)",
+        "\\(x^2 - 36\\)"
+    ],
+    respuestaCorrecta: "\\(x^2 - 36\\)",
+    formula: "\\((a+b)(a-b) = a^2 - b^2\\)",
+    explicacion: "Es una diferencia de cuadrados: \\((x+6)(x-6) = x^2 - 6^2 = x^2 - 36\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((5a + 3b)(5a - 3b)\\)",
+    imagen: "",
+    opciones: [
+        "\\(25a^2 + 9b^2\\)",
+        "\\(25a^2 - 30ab + 9b^2\\)",
+        "\\(25a^2 - 9b^2\\)"
+    ],
+    respuestaCorrecta: "\\(25a^2 - 9b^2\\)",
+    formula: "\\((a+b)(a-b) = a^2 - b^2\\)",
+    explicacion: "Es una diferencia de cuadrados: \\((5a+3b)(5a-3b) = (5a)^2 - (3b)^2 = 25a^2 - 9b^2\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((2x - 8)(2x + 8)\\)",
+    imagen: "",
+    opciones: [
+        "\\(4x^2 + 64\\)",
+        "\\(4x^2 - 32x + 64\\)",
+        "\\(4x^2 - 64\\)"
+    ],
+    respuestaCorrecta: "\\(4x^2 - 64\\)",
+    formula: "\\((a-b)(a+b) = a^2 - b^2\\)",
+    explicacion: "Es una diferencia de cuadrados: \\((2x-8)(2x+8) = (2x)^2 - 8^2 = 4x^2 - 64\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((x + 3)(x + 8)\\)",
+    imagen: "",
+    opciones: [
+        "\\(x^2 + 24\\)",
+        "\\(x^2 + 5x + 24\\)",
+        "\\(x^2 + 11x + 24\\)"
+    ],
+    respuestaCorrecta: "\\(x^2 + 11x + 24\\)",
+    formula: "\\((x+a)(x+b) = x^2 + (a+b)x + ab\\)",
+    explicacion: "Multiplicando: \\((x+3)(x+8) = x^2 + 8x + 3x + 24 = x^2 + 11x + 24\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((a - 4)(a + 7)\\)",
+    imagen: "",
+    opciones: [
+        "\\(a^2 - 28\\)",
+        "\\(a^2 + 11a - 28\\)",
+        "\\(a^2 + 3a - 28\\)"
+    ],
+    respuestaCorrecta: "\\(a^2 + 3a - 28\\)",
+    formula: "\\((x+a)(x+b) = x^2 + (a+b)x + ab\\)",
+    explicacion: "Multiplicando: \\((a-4)(a+7) = a^2 + 7a - 4a - 28 = a^2 + 3a - 28\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((2x - 5)(2x + 1)\\)",
+    imagen: "",
+    opciones: [
+        "\\(4x^2 - 5\\)",
+        "\\(4x^2 - 4x - 5\\)",
+        "\\(4x^2 - 8x - 5\\)"
+    ],
+    respuestaCorrecta: "\\(4x^2 - 8x - 5\\)",
+    formula: "Se multiplica término a término.",
+    explicacion: "Multiplicando: \\((2x-5)(2x+1) = 4x^2 + 2x - 10x - 5 = 4x^2 - 8x - 5\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((x + 2)^3\\)",
+    imagen: "",
+    opciones: [
+        "\\(x^3 + 8\\)",
+        "\\(x^3 + 3x^2 + 3x + 8\\)",
+        "\\(x^3 + 6x^2 + 12x + 8\\)"
+    ],
+    respuestaCorrecta: "\\(x^3 + 6x^2 + 12x + 8\\)",
+    formula: "\\((a+b)^3 = a^3 + 3a^2b + 3ab^2 + b^3\\)",
+    explicacion: "Aplicando la fórmula: \\((x+2)^3 = x^3 + 3(x^2)(2) + 3(x)(2^2) + 2^3 = x^3 + 6x^2 + 12x + 8\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((2a - 3)^3\\)",
+    imagen: "",
+    opciones: [
+        "\\(8a^3 - 27\\)",
+        "\\(8a^3 - 12a^2 + 18a - 27\\)",
+        "\\(8a^3 - 36a^2 + 54a - 27\\)"
+    ],
+    respuestaCorrecta: "\\(8a^3 - 36a^2 + 54a - 27\\)",
+    formula: "\\((a-b)^3 = a^3 - 3a^2b + 3ab^2 - b^3\\)",
+    explicacion: "Aplicando la fórmula: \\((2a-3)^3 = (2a)^3 - 3(2a)^2(3) + 3(2a)(3^2) - 3^3 = 8a^3 - 36a^2 + 54a - 27\\). ✓"
+},
+{
+    pregunta: "Desarrolla \\((3x + 1)^3\\)",
+    imagen: "",
+    opciones: [
+        "\\(27x^3 + 1\\)",
+        "\\(27x^3 + 9x^2 + 3x + 1\\)",
+        "\\(27x^3 + 27x^2 + 9x + 1\\)"
+    ],
+    respuestaCorrecta: "\\(27x^3 + 27x^2 + 9x + 1\\)",
+    formula: "\\((a+b)^3 = a^3 + 3a^2b + 3ab^2 + b^3\\)",
+    explicacion: "Aplicando la fórmula: \\((3x+1)^3 = (3x)^3 + 3(3x)^2(1) + 3(3x)(1^2) + 1^3 = 27x^3 + 27x^2 + 9x + 1\\). ✓"
+},
+    
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,6);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
