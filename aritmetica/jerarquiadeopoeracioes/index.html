@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Rectas paralelas cortadas por una secante";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+ {
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{3[(20-4)+4]}{\\sqrt{100}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(3\\)",
+        "\\(12\\)",
+        "\\(6\\)"
+    ],
+    respuestaCorrecta: "\\(6\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz, multiplicación y división.",
+    explicacion: "\\((20-4)+4=20\\). Luego \\(3(20)=60\\) y \\(\\sqrt{100}=10\\). Entonces \\(\\dfrac{60}{10}=6\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{5[(15-3)+2]}{\\sqrt{144}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(5\\)",
+        "\\(7\\)",
+        "\\(\\dfrac{35}{6}\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{35}{6}\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz, multiplicación y división.",
+    explicacion: "\\((15-3)+2=14\\). Luego \\(5(14)=70\\) y \\(\\sqrt{144}=12\\). Entonces \\(\\dfrac{70}{12}=\\dfrac{35}{6}\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{2[(30-10)+5]}{\\sqrt{25}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(15\\)",
+        "\\(20\\)",
+        "\\(10\\)"
+    ],
+    respuestaCorrecta: "\\(10\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz, multiplicación y división.",
+    explicacion: "\\((30-10)+5=25\\). Luego \\(2(25)=50\\) y \\(\\sqrt{25}=5\\). Entonces \\(\\dfrac{50}{5}=10\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{4[(18-6)+3]}{\\sqrt{81}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(6\\)",
+        "\\(8\\)",
+        "\\(\\dfrac{20}{3}\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{20}{3}\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz, multiplicación y división.",
+    explicacion: "\\((18-6)+3=15\\). Luego \\(4(15)=60\\) y \\(\\sqrt{81}=9\\). Entonces \\(\\dfrac{60}{9}=\\dfrac{20}{3}\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{6[(25-5)+10]}{\\sqrt{400}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(6\\)",
+        "\\(12\\)",
+        "\\(9\\)"
+    ],
+    respuestaCorrecta: "\\(9\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz, multiplicación y división.",
+    explicacion: "\\((25-5)+10=30\\). Luego \\(6(30)=180\\) y \\(\\sqrt{400}=20\\). Entonces \\(\\dfrac{180}{20}=9\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{2[(40-8)+2]}{\\sqrt{36}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(13\\)",
+        "\\(16\\)",
+        "\\(\\dfrac{34}{3}\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{34}{3}\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz, multiplicación y división.",
+    explicacion: "\\((40-8)+2=34\\). Luego \\(2(34)=68\\) y \\(\\sqrt{36}=6\\). Entonces \\(\\dfrac{68}{6}=\\dfrac{34}{3}\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{2[(35-7)\\div 4+5]+3}{\\sqrt{169}-4}\\)",
+    imagen: "",
+    opciones: [
+        "\\(4\\)",
+        "\\(5\\)",
+        "\\(3\\)"
+    ],
+    respuestaCorrecta: "\\(3\\)",
+    formula: "Primero se resuelven paréntesis, luego raíz, multiplicación, suma y división.",
+    explicacion: "\\((35-7)\\div 4=7\\), y \\(7+5=12\\). Luego \\(2(12)+3=27\\). En el denominador, \\(\\sqrt{169}-4=13-4=9\\). Entonces \\(\\dfrac{27}{9}=3\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{4[2(18-6)-8]+6}{\\sqrt{100}+\\sqrt{36}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(2\\)",
+        "\\(3\\)",
+        "\\(\\dfrac{35}{8}\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{35}{8}\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíces y finalmente la división.",
+    explicacion: "\\(18-6=12\\), \\(2(12)=24\\), y \\(24-8=16\\). Luego \\(4(16)+6=70\\). En el denominador, \\(\\sqrt{100}+\\sqrt{36}=10+6=16\\). Entonces \\(\\dfrac{70}{16}=\\dfrac{35}{8}\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{3[(48\\div 6+2)\\times 3]-5}{\\sqrt{225}-8}\\)",
+    imagen: "",
+    opciones: [
+        "\\(7\\)",
+        "\\(9\\)",
+        "\\(\\dfrac{85}{7}\\)"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{85}{7}\\)",
+    formula: "Primero se resuelven paréntesis, luego corchetes, raíz y división.",
+    explicacion: "\\(48\\div 6=8\\), \\(8+2=10\\), y \\(10\\times 3=30\\). Luego \\(3(30)-5=85\\). En el denominador, \\(\\sqrt{225}-8=15-8=7\\). Entonces \\(\\dfrac{85}{7}\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{5[2(24-8)+4]-10}{\\sqrt{144}+\\sqrt{25}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(6\\)",
+        "\\(8\\)",
+        "\\(10\\)"
+    ],
+    respuestaCorrecta: "\\(10\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíces y finalmente la división.",
+    explicacion: "\\(24-8=16\\), \\(2(16)=32\\), y \\(32+4=36\\). Luego \\(5(36)-10=170\\). En el denominador, \\(\\sqrt{144}+\\sqrt{25}=12+5=17\\). Entonces \\(\\dfrac{170}{17}=10\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{3[4(15-5)-12]+6}{\\sqrt{121}-\\sqrt{64}}\\)",
+    imagen: "",
+    opciones: [
+        "\\(18\\)",
+        "\\(24\\)",
+        "\\(30\\)"
+    ],
+    respuestaCorrecta: "\\(30\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíces y finalmente la división.",
+    explicacion: "\\(15-5=10\\), \\(4(10)=40\\), y \\(40-12=28\\). Luego \\(3(28)+6=90\\). En el denominador, \\(\\sqrt{121}-\\sqrt{64}=11-8=3\\). Entonces \\(\\dfrac{90}{3}=30\\). ✓"
+},
+{
+    pregunta: "Evalúa la siguiente expresión: \\(\\dfrac{4[(72\\div 8+3)\\times 2]-4}{\\sqrt{289}-15}\\)",
+    imagen: "",
+    opciones: [
+        "\\(10\\)",
+        "\\(12\\)",
+        "\\(46\\)"
+    ],
+    respuestaCorrecta: "\\(46\\)",
+    formula: "Primero se resuelven paréntesis y corchetes, luego raíz y finalmente la división.",
+    explicacion: "\\(72\\div 8=9\\), \\(9+3=12\\), y \\(12\\times 2=24\\). Luego \\(4(24)-4=92\\). En el denominador, \\(\\sqrt{289}-15=17-15=2\\). Entonces \\(\\dfrac{92}{2}=46\\). ✓"
+},
+    
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,6);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
