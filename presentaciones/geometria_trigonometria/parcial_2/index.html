@@ -1,14 +1,267 @@
-<div style="max-width: 1200px; margin: 0 auto;">
-  <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-    
-    <iframe 
-      src="https://view.genially.com/69b98c92fa32e01ffea57d62" 
-      title="GEOMETRÍA Y TRIGONOMETRÍA Parcial 2"
-      loading="lazy"
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-      allowfullscreen
-      allow="fullscreen; autoplay; encrypted-media"
-    ></iframe>
-    
+<style>
+  body {
+    background: #ccffcc;
+    font-size: 18px;
+  }
+
+  #formulario-alumno {
+    width: 95%;
+    max-width: 700px;
+    margin: 50px auto;
+    text-align: center;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+  }
+
+  #formulario-alumno input,
+  #formulario-alumno select {
+    width: 90%;
+    max-width: 500px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 18px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #e9ffe9;
+  }
+
+  #formulario-alumno input:focus,
+  #formulario-alumno select:focus {
+    outline: none;
+    background: #d0ffd0;
+    border-color: #99cc99;
+  }
+
+  #formulario-alumno button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  #mensaje {
+    color: #664d03;
+    font-size: 18px;
+  }
+
+  #contenido-genially {
+    display: none;
+  }
+</style>
+
+<div id="formulario-alumno">
+  <h2>Ingresa tus datos</h2>
+
+  <input
+    id="nombre"
+    type="text"
+    placeholder="Primer nombre"
+    required
+    style="text-transform: uppercase;"
+    oninput="
+      this.value = this.value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z\s]/g, '')
+        .toUpperCase();
+    "
+  >
+
+  <input
+    id="apellido"
+    type="text"
+    placeholder="Primer apellido"
+    required
+    style="text-transform: uppercase;"
+    oninput="
+      this.value = this.value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z\s]/g, '')
+        .toUpperCase();
+    "
+  >
+
+  <select id="cecyt" required>
+    <option value="">Selecciona tu CECyT</option>
+    <option value="CECyT 1">CECyT 1</option>
+    <option value="CECyT 2">CECyT 2</option>
+    <option value="CECyT 3">CECyT 3</option>
+    <option value="CECyT 4">CECyT 4</option>
+    <option value="CECyT 5">CECyT 5</option>
+    <option value="CECyT 6">CECyT 6</option>
+    <option value="CECyT 7">CECyT 7</option>
+    <option value="CECyT 8">CECyT 8</option>
+    <option value="CECyT 9">CECyT 9</option>
+    <option value="CECyT 10">CECyT 10</option>
+    <option value="CECyT 11">CECyT 11</option>
+    <option value="CECyT 12">CECyT 12</option>
+    <option value="CECyT 13">CECyT 13</option>
+    <option value="CECyT 14">CECyT 14</option>
+    <option value="CECyT 15">CECyT 15</option>
+    <option value="CECyT 16">CECyT 16</option>
+    <option value="CECyT 17">CECyT 17</option>
+    <option value="CECyT 18">CECyT 18</option>
+    <option value="CECyT 19">CECyT 19</option>
+    <option value="Otra escuela">Otra escuela</option>
+  </select>
+
+  <br>
+
+  <button onclick="guardarAlumno()">Ingresar</button>
+
+  <p id="mensaje"></p>
+</div>
+
+<div id="contenido-genially">
+  <div class="container-wrapper-genially" style="position: relative; min-height: 400px; max-width: 100%;">
+    <video
+      class="loader-genially"
+      autoplay
+      loop
+      playsinline
+      muted
+      style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; margin-bottom: 10%;"
+    >
+      <source src="https://static.genially.com/resources/loader-default-rebranding.mp4" type="video/mp4">
+      Tu navegador no soporta la etiqueta de video.
+    </video>
+
+    <div
+      id="69b98c92fa32e01ffea57d62"
+      class="genially-embed"
+      style="margin: 0 auto; position: relative; height: auto; width: 100%;"
+    ></div>
   </div>
 </div>
+
+<script>
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyoYthwEg5G8ZQaA9mMv8uAdEBsS1Ch-crM5rAVZYAlNIS_SPjLb5I5B1Tj9URD8R3M/exec";
+
+  let nombreAlumno = "";
+  let apellidoAlumno = "";
+  let cecytAlumno = "";
+  let inicioActivo = null;
+  let tiempoActivoTotal = 0;
+  let intervaloGuardado = null;
+  let sessionId = Date.now().toString() + Math.random().toString(36).substring(2);
+
+  function cargarGenially() {
+    var d = document;
+    var js;
+    var id = "genially-embed-js";
+    var ref = d.getElementsByTagName("script")[0];
+
+    if (d.getElementById(id)) {
+      return;
+    }
+
+    js = d.createElement("script");
+    js.id = id;
+    js.async = true;
+    js.src = "https://view.genially.com/static/embed/embed.js";
+    ref.parentNode.insertBefore(js, ref);
+  }
+
+  function iniciarConteoActivo() {
+    if (inicioActivo === null) {
+      inicioActivo = Date.now();
+    }
+  }
+
+  function pausarConteoActivo() {
+    if (inicioActivo !== null) {
+      tiempoActivoTotal += Date.now() - inicioActivo;
+      inicioActivo = null;
+    }
+  }
+
+  function obtenerTiempoActivo() {
+    let total = tiempoActivoTotal;
+
+    if (inicioActivo !== null) {
+      total += Date.now() - inicioActivo;
+    }
+
+    const segundos = Math.floor(total / 1000);
+    const minutos = Math.floor(segundos / 60);
+    const segundosRestantes = segundos % 60;
+
+    return minutos + " min " + segundosRestantes + " seg";
+  }
+
+  function enviarTiempoActivo() {
+    if (!nombreAlumno || !apellidoAlumno || !cecytAlumno) {
+      return;
+    }
+
+    const datos = {
+      sessionId: sessionId,
+      nombre: nombreAlumno,
+      apellido: apellidoAlumno,
+      cecyt: cecytAlumno,
+      test: "Genially 69b98c92fa32e01ffea57d62",
+      tiempoActivo: obtenerTiempoActivo()
+    };
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify(datos)
+    });
+  }
+
+  function guardarAlumno() {
+    const nombre = document.getElementById("nombre").value.trim();
+    const apellido = document.getElementById("apellido").value.trim();
+    const cecyt = document.getElementById("cecyt").value.trim();
+    const mensaje = document.getElementById("mensaje");
+
+    if (!nombre || !apellido || !cecyt) {
+      mensaje.textContent = "Completa todos los campos.";
+      return;
+    }
+
+    nombreAlumno = nombre;
+    apellidoAlumno = apellido;
+    cecytAlumno = cecyt;
+
+    mensaje.textContent = "Guardando datos...";
+
+    document.getElementById("formulario-alumno").style.display = "none";
+    document.getElementById("contenido-genially").style.display = "block";
+
+    iniciarConteoActivo();
+    cargarGenially();
+
+    enviarTiempoActivo();
+
+    intervaloGuardado = setInterval(function () {
+      enviarTiempoActivo();
+    }, 15000);
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!nombreAlumno) {
+      return;
+    }
+
+    if (document.hidden) {
+      pausarConteoActivo();
+      enviarTiempoActivo();
+    } else {
+      iniciarConteoActivo();
+    }
+  });
+
+  window.addEventListener("beforeunload", function () {
+    pausarConteoActivo();
+    enviarTiempoActivo();
+  });
+</script>
