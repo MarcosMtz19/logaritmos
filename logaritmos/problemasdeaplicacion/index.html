@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Problemas de aplicación de Logarítmos y Exponenciales";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+{
+    pregunta: "Una bacteria se reproduce cada 25 minutos; es decir, cada bacteria se divide en dos. ¿Cuánto tiempo tardarán en ser 1,000 bacterias?",
+    imagen: "",
+    opciones: [
+        "Aprox. 200 minutos",
+        "Aprox. 250 minutos",
+        "Aprox. 300 minutos"
+    ],
+    respuestaCorrecta: "Aprox. 250 minutos",
+    formula: "\\(N = N_0(2^{t/25})\\)",
+    explicacion: "Si inicia con una bacteria, el modelo es \\(1000 = 2^{t/25}\\). Aplicando logaritmos: \\(t = 25\\log_2(1000)\\). Por lo tanto, \\(t \\approx 249.14\\), es decir, aproximadamente 250 minutos. ✓"
+},
+{
+    pregunta: "Un biólogo tiene un caldo de cultivo con un número inicial de 3500 bacterias, el cual se ha duplicado en tamaño al cabo de 2 horas. a) Calcula la ecuación que describe el número de bacterias en función del tiempo. b) ¿Cuál es el número de bacterias al cabo de 180 minutos?",
+    imagen: "",
+    opciones: [
+        "\\(y = 3500(2^t)\\), aprox. 28000 bacterias",
+        "\\(y = 3500(2^{0.5t})\\), aprox. 4900 bacterias",
+        "\\(y = 3500(2^{0.5t})\\), aprox. 9899 bacterias"
+    ],
+    respuestaCorrecta: "\\(y = 3500(2^{0.5t})\\), aprox. 9899 bacterias",
+    formula: "\\(y = y_0(2^{t/d})\\)",
+    explicacion: "Como las bacterias se duplican cada 2 horas, el modelo es \\(y = 3500(2^{t/2}) = 3500(2^{0.5t})\\). Para 180 minutos, convertimos a horas: \\(180\\text{ min}=3\\text{ h}\\). Entonces \\(y=3500(2^{1.5})\\approx 9899\\). ✓"
+},
+{
+    pregunta: "El elemento químico Radio tiene una vida media de 1600 años. Si un reactor nuclear utiliza este elemento como combustible, ¿cuántos años deben pasar para que la cantidad inicial de combustible llegue a una tercera parte de la cantidad inicial?",
+    imagen: "",
+    opciones: [
+        "Aprox. 1600 años",
+        "Aprox. 2536 años",
+        "Aprox. 3200 años"
+    ],
+    respuestaCorrecta: "Aprox. 2536 años",
+    formula: "\\(C(t)=C_0\\left(\\dfrac{1}{2}\\right)^{t/1600}\\)",
+    explicacion: "Se busca que \\(C(t)=\\dfrac{1}{3}C_0\\). Entonces \\(\\dfrac{1}{3}=\\left(\\dfrac{1}{2}\\right)^{t/1600}\\). Aplicando logaritmos, \\(t=1600\\dfrac{\\ln(1/3)}{\\ln(1/2)}\\approx 2536\\). ✓"
+},
+{
+    pregunta: "En una comunidad de 25,000 habitantes brota una epidemia de gripa y el número \\(N\\) de personas contagiadas después de \\(t\\) días se determina mediante el modelo \\(N=\\dfrac{25000}{1+1590e^{-0.23t}}\\). ¿En cuánto tiempo habrá 7,000 contagiados?",
+    imagen: "",
+    opciones: [
+        "Aprox. 18 días",
+        "Aprox. 28 días",
+        "Aprox. 35 días"
+    ],
+    respuestaCorrecta: "Aprox. 28 días",
+    formula: "\\(N=\\dfrac{25000}{1+1590e^{-0.23t}}\\)",
+    explicacion: "Sustituyendo \\(N=7000\\): \\(7000=\\dfrac{25000}{1+1590e^{-0.23t}}\\). Al despejar, se obtiene \\(t\\approx 27.94\\). Por lo tanto, habrá 7,000 contagiados aproximadamente en 28 días. ✓"
+},
+{
+    pregunta: "La presión del aire \\(p\\), en \\(lb/pulg^2\\), a una altura \\(h\\) en pulgadas sobre el nivel del mar, puede estimarse por la fórmula \\(p(h)=14.7e^{-0.0000385h}\\). ¿A qué altura sobre el nivel del mar la presión del aire es \\(12\\ lb/pulg^2\\)?",
+    imagen: "",
+    opciones: [
+        "Aprox. 4271.2 pulg",
+        "Aprox. 5271.2 pulg",
+        "Aprox. 6271.2 pulg"
+    ],
+    respuestaCorrecta: "Aprox. 5271.2 pulg",
+    formula: "\\(p(h)=14.7e^{-0.0000385h}\\)",
+    explicacion: "Sustituyendo \\(p(h)=12\\): \\(12=14.7e^{-0.0000385h}\\). Entonces \\(\\dfrac{12}{14.7}=e^{-0.0000385h}\\). Aplicando logaritmo natural y despejando, \\(h\\approx 5271.2\\) pulgadas. ✓"
+},
+{
+    pregunta: "La bacteria Escherichia Coli crece de acuerdo con el modelo matemático \\(y=1000(e)^{0.5x}\\), siendo \\(x\\) el tiempo en días. ¿Cuántas bacterias se tendrán al término de una semana?",
+    imagen: "",
+    opciones: [
+        "Aprox. 20115 bacterias",
+        "Aprox. 33115 bacterias",
+        "Aprox. 44115 bacterias"
+    ],
+    respuestaCorrecta: "Aprox. 33115 bacterias",
+    formula: "\\(y=1000e^{0.5x}\\)",
+    explicacion: "Una semana tiene 7 días, entonces \\(x=7\\). Sustituyendo: \\(y=1000e^{0.5(7)}=1000e^{3.5}\\approx 33115\\). ✓"
+},
+{
+    pregunta: "La población actual de ratas en una ciudad es de 40,000. Si se duplican cada 8 años, ¿cuándo habrá 500,000 ratas en la ciudad?",
+    imagen: "",
+    opciones: [
+        "Aprox. 20 años",
+        "Aprox. 29 años",
+        "Aprox. 36 años"
+    ],
+    respuestaCorrecta: "Aprox. 29 años",
+    formula: "\\(N(t)=N_0(2^{t/8})\\)",
+    explicacion: "El modelo es \\(500000=40000(2^{t/8})\\). Dividiendo entre 40000: \\(12.5=2^{t/8}\\). Aplicando logaritmos, \\(t=8\\log_2(12.5)\\approx 29.15\\). Por lo tanto, aproximadamente 29 años. ✓"
+},
+{
+    pregunta: "El tiempo de vida media de un material radioactivo está dado por la fórmula \\(C(t)=C_0\\left(2^{-t/m}\\right)\\). Calcula qué cantidad de material queda después de haber transcurrido 156 años, si la vida media del material es de 52 años.",
+    imagen: "",
+    opciones: [
+        "\\(\\dfrac{1}{2}\\) del material inicial",
+        "\\(\\dfrac{1}{4}\\) del material inicial",
+        "\\(\\dfrac{1}{8}\\) del material inicial"
+    ],
+    respuestaCorrecta: "\\(\\dfrac{1}{8}\\) del material inicial",
+    formula: "\\(C(t)=C_0\\left(2^{-t/m}\\right)\\)",
+    explicacion: "Sustituyendo \\(t=156\\) y \\(m=52\\): \\(C(156)=C_0(2^{-156/52})=C_0(2^{-3})\\). Como \\(2^{-3}=\\dfrac{1}{8}\\), queda \\(\\dfrac{1}{8}\\) del material inicial. ✓"
+},
+{
+    pregunta: "La eficiencia de un operador en cierta fábrica está dada por la expresión \\(y=120-80e^{-0.3t}\\), donde el operador puede completar \\(y\\) unidades de trabajo cada día después de desarrollar dicho trabajo durante \\(t\\) meses. ¿Cuántos meses de experiencia requerirá dicho operador para completar 88 unidades diarias?",
+    imagen: "",
+    opciones: [
+        "Aprox. 2 meses",
+        "Aprox. 3 meses",
+        "Aprox. 4 meses"
+    ],
+    respuestaCorrecta: "Aprox. 3 meses",
+    formula: "\\(y=120-80e^{-0.3t}\\)",
+    explicacion: "Sustituyendo \\(y=88\\): \\(88=120-80e^{-0.3t}\\). Entonces \\(80e^{-0.3t}=32\\), por lo que \\(e^{-0.3t}=0.4\\). Aplicando logaritmo natural, \\(t\\approx 3.05\\). Por lo tanto, aproximadamente 3 meses. ✓"
+},
+{
+    pregunta: "Sea \\(G(t)\\) la función que permite calcular la cantidad de gramos de una sustancia radioactiva que se tiene después de \\(t\\) segundos, dada por \\(G(t)=100e^{-0.3t}\\). Calcula el tiempo necesario para que queden solamente 10 g de la sustancia.",
+    imagen: "",
+    opciones: [
+        "Aprox. 5.67 segundos",
+        "Aprox. 7.67 segundos",
+        "Aprox. 9.67 segundos"
+    ],
+    respuestaCorrecta: "Aprox. 7.67 segundos",
+    formula: "\\(G(t)=100e^{-0.3t}\\)",
+    explicacion: "Sustituyendo \\(G(t)=10\\): \\(10=100e^{-0.3t}\\). Entonces \\(0.1=e^{-0.3t}\\). Aplicando logaritmo natural, \\(t=\\dfrac{\\ln(0.1)}{-0.3}\\approx 7.67\\). ✓"
+},
+{
+    pregunta: "Una población de bacterias se duplica cada 3 horas. Si inicialmente hay 500 bacterias, ¿después de cuántas horas la población alcanzará 128,000 bacterias?",
+    imagen: "",
+    opciones: [
+        "18 horas",
+        "21 horas",
+        "24 horas"
+    ],
+    respuestaCorrecta: "24 horas",
+    formula: "\\(N(t)=N_0(2^{t/3})\\)",
+    explicacion: "El modelo es \\(128000=500(2^{t/3})\\). Dividiendo entre 500: \\(256=2^{t/3}\\). Como \\(256=2^8\\), entonces \\(t/3=8\\), por lo tanto \\(t=24\\) horas. ✓"
+},
+{
+    pregunta: "Un isótopo radiactivo tiene una vida media de 5,730 años. Si una muestra inicial contiene 80 gramos, ¿cuántos gramos quedarán después de 22,920 años?",
+    imagen: "",
+    opciones: [
+        "2.5 gramos",
+        "5 gramos",
+        "10 gramos"
+    ],
+    respuestaCorrecta: "5 gramos",
+    formula: "\\(C(t)=C_0\\left(\\dfrac{1}{2}\\right)^{t/5730}\\)",
+    explicacion: "Como \\(22920\\div5730=4\\), han pasado 4 vidas medias. Entonces \\(C=80\\left(\\dfrac{1}{2}\\right)^4=\\dfrac{80}{16}=5\\). Quedan 5 gramos. ✓"
+},
+{
+    pregunta: "Una inversión de 10,000 euros crece continuamente según la fórmula \\(A(t)=10000e^{0.08t}\\), donde \\(t\\) está en años. ¿En cuántos años aproximadamente se triplicará la inversión?",
+    imagen: "",
+    opciones: [
+        "13.73 años",
+        "10.39 años",
+        "18.54 años"
+    ],
+    respuestaCorrecta: "13.73 años",
+    formula: "\\(A(t)=10000e^{0.08t}\\)",
+    explicacion: "Para triplicar la inversión: \\(30000=10000e^{0.08t}\\). Entonces \\(3=e^{0.08t}\\). Aplicando logaritmo natural: \\(t=\\dfrac{\\ln(3)}{0.08}\\approx13.73\\). ✓"
+},
+{
+    pregunta: "La concentración de iones de hidrógeno en una solución es de \\(2.5\\times10^{-5}\\) mol/L. ¿Cuál es el pH de la solución?",
+    imagen: "",
+    opciones: [
+        "4.60",
+        "5.20",
+        "3.85"
+    ],
+    respuestaCorrecta: "4.60",
+    formula: "\\(pH=-\\log_{10}[H^+]\\)",
+    explicacion: "Sustituyendo: \\(pH=-\\log_{10}(2.5\\times10^{-5})\\). Al calcular, \\(pH\\approx4.60\\). ✓"
+},
+{
+    pregunta: "Un material se enfría según la ley de Newton: \\(T(t)=T_a+(T_0-T_a)e^{-kt}\\), donde \\(T_a=20^\\circ C\\), \\(T_0=100^\\circ C\\) y \\(k=0.1\\ \\text{min}^{-1}\\). ¿Después de cuántos minutos la temperatura será de \\(40^\\circ C\\)?",
+    imagen: "",
+    opciones: [
+        "13.86 minutos",
+        "27.63 minutos",
+        "31.09 minutos"
+    ],
+    respuestaCorrecta: "13.86 minutos",
+    formula: "\\(T(t)=T_a+(T_0-T_a)e^{-kt}\\)",
+    explicacion: "Sustituyendo: \\(40=20+80e^{-0.1t}\\). Entonces \\(20=80e^{-0.1t}\\), por lo que \\(0.25=e^{-0.1t}\\). Aplicando logaritmo natural: \\(t=\\dfrac{\\ln(0.25)}{-0.1}\\approx13.86\\) minutos. ✓"
+},
+{
+    pregunta: "Una sustancia radiactiva sigue el modelo \\(N(t)=N_0\\cdot2^{-t/T}\\), donde \\(T\\) es la vida media. Si el 87.5% de la sustancia se ha desintegrado, ¿cuántas vidas medias han pasado?",
+    imagen: "",
+    opciones: [
+        "2.5 vidas medias",
+        "2 vidas medias",
+        "3 vidas medias"
+    ],
+    respuestaCorrecta: "3 vidas medias",
+    formula: "\\(N(t)=N_0\\cdot2^{-t/T}\\)",
+    explicacion: "Si se ha desintegrado el 87.5%, queda el 12.5%, es decir, \\(\\dfrac{1}{8}\\). Entonces \\(\\dfrac{1}{8}=2^{-t/T}\\). Como \\(\\dfrac{1}{8}=2^{-3}\\), han pasado 3 vidas medias. ✓"
+},
+{
+    pregunta: "La magnitud de un terremoto se calcula con \\(M=\\dfrac{2}{3}\\log_{10}\\left(\\dfrac{E}{E_0}\\right)\\), donde \\(E\\) es la energía liberada y \\(E_0=10^{4.4}\\) julios. ¿Cuánta energía libera un terremoto de magnitud 7.5?",
+    imagen: "",
+    opciones: [
+        "\\(1.41\\times10^{15}\\) julios",
+        "\\(2.82\\times10^{15}\\) julios",
+        "\\(4.47\\times10^{15}\\) julios"
+    ],
+    respuestaCorrecta: "\\(4.47\\times10^{15}\\) julios",
+    formula: "\\(M=\\dfrac{2}{3}\\log_{10}\\left(\\dfrac{E}{E_0}\\right)\\)",
+    explicacion: "Sustituyendo \\(M=7.5\\): \\(7.5=\\dfrac{2}{3}\\log_{10}\\left(\\dfrac{E}{10^{4.4}}\\right)\\). Entonces \\(\\log_{10}\\left(\\dfrac{E}{10^{4.4}}\\right)=11.25\\). Por lo tanto, \\(E=10^{4.4}\\cdot10^{11.25}=10^{15.65}\\approx4.47\\times10^{15}\\) julios. ✓"
+},
+{
+    pregunta: "El crecimiento de una población de ciervos sigue \\(P(t)=\\dfrac{5000}{1+4e^{-0.3t}}\\). ¿Después de cuántos años la población será de 4000 ciervos?",
+    imagen: "",
+    opciones: [
+        "4.62 años",
+        "5.38 años",
+        "9.24 años"
+    ],
+    respuestaCorrecta: "9.24 años",
+    formula: "\\(P(t)=\\dfrac{5000}{1+4e^{-0.3t}}\\)",
+    explicacion: "Sustituyendo \\(P(t)=4000\\): \\(4000=\\dfrac{5000}{1+4e^{-0.3t}}\\). Entonces \\(1+4e^{-0.3t}=1.25\\), por lo que \\(e^{-0.3t}=0.0625\\). Aplicando logaritmo natural: \\(t=\\dfrac{\\ln(0.0625)}{-0.3}\\approx9.24\\) años. ✓"
+},
+{
+    pregunta: "Una deuda de 50,000 euros se capitaliza mensualmente a una tasa anual del 6%. ¿En cuántos meses se duplicará la deuda?",
+    imagen: "",
+    opciones: [
+        "137.8 meses",
+        "139.0 meses",
+        "142.3 meses"
+    ],
+    respuestaCorrecta: "139.0 meses",
+    formula: "\\(A=P\\left(1+\\dfrac{r}{12}\\right)^n\\)",
+    explicacion: "Para duplicar la deuda: \\(2P=P\\left(1+\\dfrac{0.06}{12}\\right)^n\\). Entonces \\(2=(1.005)^n\\). Aplicando logaritmos: \\(n=\\dfrac{\\ln(2)}{\\ln(1.005)}\\approx138.98\\). Aproximadamente 139 meses. ✓"
+},
+    
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,6);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+if(question.selectedAnswer!==null) return;
+
+question.selectedAnswer=option;
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
