@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Rectas Paralelas Cortadas por una Recta Secante</title>
+<title id="page-title"></title>
 
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
 <script id="MathJax-script" async
 src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
 
@@ -14,8 +14,8 @@ body{
     font-size:18px;
 }
 #quiz-container{
-    width:80%;
-    max-width:600px;
+    width:95%;
+    max-width:1200px;
     margin:auto;
     text-align:center;
     background:#fff;
@@ -30,6 +30,9 @@ body{
     margin:10px 0;
     padding:16px;
     border-radius:5px;
+}
+#options{
+    padding-left:0;
 }
 #options li{
     list-style:none;
@@ -51,14 +54,46 @@ button{
     font-size:20px;
     margin-bottom:10px;
 }
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
 </style>
 </head>
 
 <body>
 
 <div id="start-container" style="text-align:center;margin-top:50px;">
-<h2>Ingresa tu nombre o alias</h2>
-<input type="text" id="student-name" placeholder="Escribe tu nombre" style="padding:10px;font-size:18px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
 <br><br>
 <button onclick="startQuiz()">Comenzar Test</button>
 </div>
@@ -79,7 +114,12 @@ button{
 let studentName="";
 let currentQuestionIndex=0;
 let score=0;
+let testStarted=false;
 
+const testTitle = "Rectas Paralelas Cortadas Por una Secante";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
 const allQuestions = [
     {
         pregunta: "¿Cuál es el valor de x de la siguiente figura?",
@@ -109,11 +149,11 @@ const allQuestions = [
         pregunta: "De  la siguiente figura ¿cuál es el valor de x-y ?",
         imagen: "https://i.imgur.com/SCR9bXG.png",
         opciones: [
-            "\\(x-y=110°\\)",
+            "\\(x-y=115°\\)",
             "\\(x-y=150°\\)",
             "\\(x-y=151°\\)"
         ],
-        respuestaCorrecta: "\\(x-y=110°\\)",
+        respuestaCorrecta: "\\(x-y=115°\\)",
         formula: "N/A",
         explicacion: "Dispomible proximamente"
     },
@@ -173,15 +213,13 @@ const allQuestions = [
         formula: "N/A",
         explicacion: "Recuerda que los ángulos suplementarios son aquellos cuya suma es igual a 180 grados."
     }
+    
 ];
 
-
-// 🔥 ALEATORIO DE PREGUNTAS
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
-.slice(0,3);
+.slice(0,6);
 
-// 🔥 ALEATORIO DE OPCIONES
 questions.forEach(q=>{
 q.selectedAnswer=null;
 q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
@@ -191,6 +229,7 @@ function startQuiz(){
 const name=document.getElementById("student-name").value.trim();
 if(name===""){alert("Escribe tu nombre");return;}
 studentName=name;
+testStarted=true;
 document.getElementById("start-container").style.display="none";
 document.getElementById("quiz-container").style.display="block";
 loadQuestion(currentQuestionIndex);
@@ -293,17 +332,38 @@ border-radius:8px;
 document.getElementById("result").innerHTML=html;
 MathJax.typesetPromise();
 
-fetch("https://script.google.com/macros/s/AKfycbx5zMbjXzJScGD6lxl0CkpLgvZRHZkXJ4-oDvD5vPEigFHqqRluUHFOw03aNFxypZ3g/exec",{
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
 method:"POST",
 body:JSON.stringify({
+titulo:testTitle,
 nombre:studentName,
 aciertos:score,
 errores:errores,
 total:total,
-porcentaje:porcentaje
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
 })
 });
 }
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
 
 </script>
 </body>
