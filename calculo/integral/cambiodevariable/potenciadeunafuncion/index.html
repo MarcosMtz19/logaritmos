@@ -116,7 +116,7 @@ let currentQuestionIndex=0;
 let score=0;
 let testStarted=false;
 
-const testTitle = "Integrales por cambio de variable";
+const testTitle = "Intagración por cambio de variable (Potencia de una función)";
 
 document.title = testTitle;
 document.getElementById("test-title-heading").textContent = testTitle;
@@ -192,8 +192,106 @@ const allQuestions = [
         respuestaCorrecta: "\\(\\dfrac{1}{3}(x^4+3)^{3/2}+C\\)",
         formula: "\\(\\displaystyle \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
         explicacion: "Tomamos \\(u=x^4+3\\), de donde \\(du=4x^3\\,dx\\). Como la integral contiene \\(2x^3\\,dx\\), despejamos \\(2x^3\\,dx=\\dfrac{du}{2}\\). Así: \\(\\displaystyle \\int 2x^3\\sqrt{x^4+3}\\,dx=\\dfrac{1}{2}\\int u^{1/2}\\,du\\). Integramos: \\(\\dfrac{1}{2}\\cdot\\dfrac{u^{3/2}}{3/2}=\\dfrac{1}{3}u^{3/2}\\). Finalmente: \\(\\boxed{\\dfrac{1}{3}(x^4+3)^{3/2}+C}\\). ✓"
+    },
+        {
+        pregunta: "Resuelve la integral, considerando que \\(a\\) es constante: \\(\\displaystyle \\int \\dfrac{(a+\\ln(x))^2}{x}\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{(a+\\ln(x))^3}{3}+C\\)",
+            "\\(\\dfrac{(a+\\ln(x))^2}{2}+C\\)",
+            "\\(3(a+\\ln(x))^3+C\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{(a+\\ln(x))^3}{3}+C\\)",
+        formula: "\\(\\displaystyle u=a+\\ln(x),\\quad du=\\dfrac{dx}{x};\\qquad \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Elegimos \\(u=a+\\ln(x)\\). Como \\(a\\) es constante y la derivada de \\(\\ln(x)\\) es \\(1/x\\), tenemos \\(du=\\dfrac{dx}{x}\\). Sustituimos: \\(\\displaystyle \\int \\dfrac{(a+\\ln(x))^2}{x}\\,dx=\\int u^2\\,du\\). Aplicamos la regla de la potencia: \\(\\displaystyle \\int u^2\\,du=\\dfrac{u^3}{3}+C\\). Regresamos a la variable original: \\(\\boxed{\\dfrac{(a+\\ln(x))^3}{3}+C}\\). ✓"
+    },
+    {
+        pregunta: "Resuelve la integral, considerando que \\(a\\) es constante: \\(\\displaystyle \\int \\dfrac{\\sqrt{a+\\ln(x)}}{x}\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{1}{3}(a+\\ln(x))^{3/2}+C\\)",
+            "\\(\\dfrac{2}{3}(a+\\ln(x))^{3/2}+C\\)",
+            "\\(2(a+\\ln(x))^{1/2}+C\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{2}{3}(a+\\ln(x))^{3/2}+C\\)",
+        formula: "\\(\\displaystyle u=a+\\ln(x),\\quad du=\\dfrac{dx}{x};\\qquad \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Reescribimos la raíz como potencia: \\(\\sqrt{a+\\ln(x)}=(a+\\ln(x))^{1/2}\\). Hacemos \\(u=a+\\ln(x)\\), de donde \\(du=\\dfrac{dx}{x}\\). La integral queda \\(\\displaystyle \\int u^{1/2}\\,du\\). Sumamos uno al exponente: \\(\\dfrac{1}{2}+1=\\dfrac{3}{2}\\), y dividimos entre el nuevo exponente: \\(\\dfrac{u^{3/2}}{3/2}=\\dfrac{2}{3}u^{3/2}\\). Finalmente: \\(\\boxed{\\dfrac{2}{3}(a+\\ln(x))^{3/2}+C}\\). En números reales se requiere \\(x>0\\) y \\(a+\\ln(x)\\geq 0\\). ✓"
+    },
+    {
+        pregunta: "Resuelve la integral: \\(\\displaystyle \\int (x^2-4x+4)^{4/3}\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{3}{7}(x-2)^{7/3}+C\\)",
+            "\\(\\dfrac{3}{11}(x^2-4x+4)^{11/3}+C\\)",
+            "\\(\\dfrac{3}{11}(x-2)^{11/3}+C\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{3}{11}(x-2)^{11/3}+C\\)",
+        formula: "\\(x^2-4x+4=(x-2)^2;\\qquad \\displaystyle \\int (x-b)^n\\,dx=\\dfrac{(x-b)^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Identificamos un trinomio cuadrado perfecto: \\(x^2-4x+4=(x-2)^2\\). Por tanto, usando potencias con raíz cúbica real: \\((x^2-4x+4)^{4/3}=(x-2)^{8/3}\\). Tomamos \\(u=x-2\\), así que \\(du=dx\\). Integramos: \\(\\displaystyle \\int u^{8/3}\\,du=\\dfrac{u^{11/3}}{11/3}+C=\\dfrac{3}{11}u^{11/3}+C\\). Sustituimos \\(u=x-2\\): \\(\\boxed{\\dfrac{3}{11}(x-2)^{11/3}+C}\\). ✓"
+    },
+    {
+        pregunta: "Resuelve la integral: \\(\\displaystyle \\int (e^x+1)^3e^x\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{(e^x+1)^4}{4}+C\\)",
+            "\\(\\dfrac{(e^x+1)^3}{3}+C\\)",
+            "\\(\\dfrac{e^x(e^x+1)^4}{4}+C\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{(e^x+1)^4}{4}+C\\)",
+        formula: "\\(\\displaystyle u=e^x+1,\\quad du=e^x\\,dx;\\qquad \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Elegimos \\(u=e^x+1\\). Al derivar obtenemos \\(du=e^x\\,dx\\), que coincide con el factor que acompaña a la potencia. Sustituimos: \\(\\displaystyle \\int (e^x+1)^3e^x\\,dx=\\int u^3\\,du\\). Aplicamos la regla de la potencia: \\(\\displaystyle \\int u^3\\,du=\\dfrac{u^4}{4}+C\\). Regresamos a \\(x\\): \\(\\boxed{\\dfrac{(e^x+1)^4}{4}+C}\\). ✓"
+    },
+    {
+        pregunta: "Resuelve la integral: \\(\\displaystyle \\int \\dfrac{e^z+e^{-z}}{\\sqrt{e^z-e^{-z}}}\\,dz\\)",
+        imagen: "",
+        opciones: [
+            "\\(2\\sqrt{e^z+e^{-z}}+C\\)",
+            "\\(2\\sqrt{e^z-e^{-z}}+C\\)",
+            "\\(\\dfrac{2}{3}(e^z-e^{-z})^{3/2}+C\\)"
+        ],
+        respuestaCorrecta: "\\(2\\sqrt{e^z-e^{-z}}+C\\)",
+        formula: "\\(\\displaystyle u=e^z-e^{-z},\\quad du=(e^z+e^{-z})\\,dz;\\qquad \\int u^{-1/2}\\,du=2u^{1/2}+C\\)",
+        explicacion: "Tomamos \\(u=e^z-e^{-z}\\). Al derivar, observamos que \\(\\dfrac{d}{dz}(-e^{-z})=+e^{-z}\\); por ello, \\(du=(e^z+e^{-z})\\,dz\\). Sustituyendo: \\(\\displaystyle \\int \\dfrac{e^z+e^{-z}}{\\sqrt{e^z-e^{-z}}}\\,dz=\\int u^{-1/2}\\,du\\). Aplicamos la regla de la potencia: \\(\\dfrac{u^{1/2}}{1/2}=2u^{1/2}\\). Finalmente: \\(\\boxed{2\\sqrt{e^z-e^{-z}}+C}\\). En números reales, el integrando requiere \\(z>0\\) para que la raíz del denominador sea positiva. ✓"
+    },
+        {
+        pregunta: "Resuelve la integral: \\(\\displaystyle \\int x^2\\sqrt{3-2x}\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(-\\dfrac{3}{4}(3-2x)^{3/2}+\\dfrac{3}{10}(3-2x)^{5/2}-\\dfrac{1}{28}(3-2x)^{7/2}+C\\)",
+            "\\(\\dfrac{3}{4}(3-2x)^{3/2}-\\dfrac{3}{10}(3-2x)^{5/2}+\\dfrac{1}{28}(3-2x)^{7/2}+C\\)",
+            "\\(-\\dfrac{3}{4}(3-2x)^{3/2}+\\dfrac{3}{5}(3-2x)^{5/2}-\\dfrac{1}{14}(3-2x)^{7/2}+C\\)"
+        ],
+        respuestaCorrecta: "\\(-\\dfrac{3}{4}(3-2x)^{3/2}+\\dfrac{3}{10}(3-2x)^{5/2}-\\dfrac{1}{28}(3-2x)^{7/2}+C\\)",
+        formula: "\\(\\displaystyle u=3-2x,\\quad x=\\dfrac{3-u}{2},\\quad dx=-\\dfrac{du}{2};\\qquad \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Hacemos la sustitución \\(u=3-2x\\). Despejamos \\(x=\\dfrac{3-u}{2}\\), por lo que \\(x^2=\\dfrac{(3-u)^2}{4}\\), y obtenemos \\(dx=-\\dfrac{du}{2}\\). Sustituyendo todos los factores: \\(\\displaystyle \\int x^2\\sqrt{3-2x}\\,dx=-\\dfrac{1}{8}\\int (3-u)^2u^{1/2}\\,du\\). Desarrollamos \\((3-u)^2=9-6u+u^2\\) y distribuimos: \\(\\displaystyle -\\dfrac{1}{8}\\int (9u^{1/2}-6u^{3/2}+u^{5/2})\\,du\\). Integramos término a término: \\(-\\dfrac{1}{8}(6u^{3/2}-\\dfrac{12}{5}u^{5/2}+\\dfrac{2}{7}u^{7/2})+C\\). Simplificamos y regresamos a \\(x\\): \\(\\boxed{-\\dfrac{3}{4}(3-2x)^{3/2}+\\dfrac{3}{10}(3-2x)^{5/2}-\\dfrac{1}{28}(3-2x)^{7/2}+C}\\). ✓"
+    },
+    {
+        pregunta: "Resuelve la integral: \\(\\displaystyle \\int \\dfrac{x^3}{\\sqrt{1-2x^2}}\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{1}{4}(1-2x^2)^{1/2}-\\dfrac{1}{12}(1-2x^2)^{3/2}+C\\)",
+            "\\(-\\dfrac{1}{4}(1-2x^2)^{1/2}+\\dfrac{1}{12}(1-2x^2)^{3/2}+C\\)",
+            "\\(-\\dfrac{1}{2}(1-2x^2)^{1/2}+\\dfrac{1}{6}(1-2x^2)^{3/2}+C\\)"
+        ],
+        respuestaCorrecta: "\\(-\\dfrac{1}{4}(1-2x^2)^{1/2}+\\dfrac{1}{12}(1-2x^2)^{3/2}+C\\)",
+        formula: "\\(\\displaystyle u=1-2x^2,\\quad x^2=\\dfrac{1-u}{2},\\quad x\\,dx=-\\dfrac{du}{4};\\qquad \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Separamos \\(x^3\\,dx=x^2(x\\,dx)\\). Elegimos \\(u=1-2x^2\\), de donde \\(du=-4x\\,dx\\) y \\(x\\,dx=-\\dfrac{du}{4}\\). Además, despejamos \\(x^2=\\dfrac{1-u}{2}\\). Sustituimos: \\(\\displaystyle \\int \\dfrac{x^3}{\\sqrt{1-2x^2}}\\,dx=-\\dfrac{1}{8}\\int (1-u)u^{-1/2}\\,du\\). Distribuimos: \\(\\displaystyle -\\dfrac{1}{8}\\int (u^{-1/2}-u^{1/2})\\,du\\). Integramos: \\(-\\dfrac{1}{8}(2u^{1/2}-\\dfrac{2}{3}u^{3/2})+C=-\\dfrac{1}{4}u^{1/2}+\\dfrac{1}{12}u^{3/2}+C\\). Regresamos a la variable original: \\(\\boxed{-\\dfrac{1}{4}(1-2x^2)^{1/2}+\\dfrac{1}{12}(1-2x^2)^{3/2}+C}\\). ✓"
+    },
+    {
+        pregunta: "Resuelve la integral: \\(\\displaystyle \\int \\dfrac{x+3}{(3-x)^{2/3}}\\,dx\\)",
+        imagen: "",
+        opciones: [
+            "\\(-\\dfrac{3}{4}(3-x)^{4/3}+18(3-x)^{1/3}+C\\)",
+            "\\(\\dfrac{3}{4}(3-x)^{4/3}-9(3-x)^{1/3}+C\\)",
+            "\\(\\dfrac{3}{4}(3-x)^{4/3}-18(3-x)^{1/3}+C\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{3}{4}(3-x)^{4/3}-18(3-x)^{1/3}+C\\)",
+        formula: "\\(\\displaystyle u=3-x,\\quad x=3-u,\\quad dx=-du;\\qquad \\int u^n\\,du=\\dfrac{u^{n+1}}{n+1}+C,\\quad n\\neq -1\\)",
+        explicacion: "Tomamos \\(u=3-x\\), por lo que \\(dx=-du\\) y \\(x=3-u\\). El numerador se transforma en \\(x+3=6-u\\). Sustituyendo: \\(\\displaystyle \\int \\dfrac{x+3}{(3-x)^{2/3}}\\,dx=-\\int (6-u)u^{-2/3}\\,du\\). Distribuimos el signo y las potencias: \\(\\displaystyle \\int (u^{1/3}-6u^{-2/3})\\,du\\). Aplicamos la regla de la potencia: \\(\\dfrac{u^{4/3}}{4/3}-6\\dfrac{u^{1/3}}{1/3}+C=\\dfrac{3}{4}u^{4/3}-18u^{1/3}+C\\). Finalmente: \\(\\boxed{\\dfrac{3}{4}(3-x)^{4/3}-18(3-x)^{1/3}+C}\\). Las potencias se interpretan mediante raíces cúbicas reales y el integrando requiere \\(x\\neq 3\\). ✓"
     }
+    
 ];
+
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
 .slice(0,3);
@@ -237,9 +335,13 @@ const li=document.createElement("li");
 li.innerHTML=option;
 
 li.onclick=()=>{
-if(question.selectedAnswer!==null) return;
-
+// Guardamos la última respuesta seleccionada.
 question.selectedAnswer=option;
+
+// Quitamos el resaltado anterior para marcar solo la opción actual.
+optionsContainer.querySelectorAll("li").forEach(item=>{
+item.style.backgroundColor="";
+});
 li.style.backgroundColor="#66cc66";
 
 document.getElementById("next-question").style.display=
@@ -323,7 +425,7 @@ const resumenPreguntas = questions.map((q, index) => {
     };
 });
 
-fetch("https://script.google.com/macros/s/AKfycbxVg3d9f54YEtoiVBBv_OCZM-K7f5CpLKD8BDPFaDnW70whe_D2jsARIepNDxSxxa6I/exec",{
+fetch("https://script.google.com/macros/s/AKfycbzOKB58r0TLy1oxfovid9iantpOAYAXvaH1vkswJaBjIMwkX_Q4G6fm-bdxr5Myoq3Z/exec",{
 method:"POST",
 body:JSON.stringify({
 titulo:testTitle,
