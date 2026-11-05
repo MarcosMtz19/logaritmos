@@ -1,1 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
 
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+
+const testTitle = "Binomio al cuadrado";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+    // NIVEL FÁCIL: 4 ejercicios
+    {
+        pregunta: "Nivel fácil. Desarrolla: \\((x+3)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(x^2+6x+9\\)",
+            "\\(x^2+9\\)",
+            "\\(x^2+3x+9\\)"
+        ],
+        respuestaCorrecta: "\\(x^2+6x+9\\)",
+        formula: "\\((a+b)^2=a^2+2ab+b^2\\)",
+        explicacion: "Identificamos \\(a=x\\) y \\(b=3\\). Elevamos ambos términos al cuadrado y calculamos el doble producto: \\(x^2+2(x)(3)+3^2\\). Simplificamos: \\(\\boxed{x^2+6x+9}\\). Recuerda que el cuadrado de una suma incluye el término central \\(2ab\\). ✓"
+    },
+    {
+        pregunta: "Nivel fácil. Desarrolla: \\((x-5)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(x^2-25\\)",
+            "\\(x^2-10x+25\\)",
+            "\\(x^2+10x+25\\)"
+        ],
+        respuestaCorrecta: "\\(x^2-10x+25\\)",
+        formula: "\\((a-b)^2=a^2-2ab+b^2\\)",
+        explicacion: "Identificamos \\(a=x\\) y \\(b=5\\). Aplicamos la fórmula: \\(x^2-2(x)(5)+5^2\\). Calculamos el doble producto y el último cuadrado: \\(\\boxed{x^2-10x+25}\\). El término central es negativo y el último término es positivo. ✓"
+    },
+    {
+        pregunta: "Nivel fácil. Desarrolla: \\((2x+1)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(4x^2+2x+1\\)",
+            "\\(2x^2+4x+1\\)",
+            "\\(4x^2+4x+1\\)"
+        ],
+        respuestaCorrecta: "\\(4x^2+4x+1\\)",
+        formula: "\\((a+b)^2=a^2+2ab+b^2\\)",
+        explicacion: "Tomamos \\(a=2x\\) y \\(b=1\\). Sustituimos: \\((2x)^2+2(2x)(1)+1^2\\). Como \\((2x)^2=4x^2\\) y \\(2(2x)(1)=4x\\), obtenemos \\(\\boxed{4x^2+4x+1}\\). ✓"
+    },
+    {
+        pregunta: "Nivel fácil. Desarrolla: \\((3m-2)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(9m^2-12m+4\\)",
+            "\\(9m^2-6m+4\\)",
+            "\\(9m^2-12m-4\\)"
+        ],
+        respuestaCorrecta: "\\(9m^2-12m+4\\)",
+        formula: "\\((a-b)^2=a^2-2ab+b^2\\)",
+        explicacion: "Identificamos \\(a=3m\\) y \\(b=2\\). Aplicamos la fórmula: \\((3m)^2-2(3m)(2)+2^2\\). Calculamos cada término: \\(9m^2-12m+4\\). Por tanto, \\(\\boxed{9m^2-12m+4}\\). ✓"
+    },
+
+    // NIVEL INTERMEDIO: 3 ejercicios
+    {
+        pregunta: "Nivel intermedio. Desarrolla: \\(\\big(\\dfrac{x}{2}+3\\big)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{x^2}{4}+\\dfrac{3x}{2}+9\\)",
+            "\\(\\dfrac{x^2}{4}+3x+9\\)",
+            "\\(\\dfrac{x^2}{2}+3x+9\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{x^2}{4}+3x+9\\)",
+        formula: "\\((a+b)^2=a^2+2ab+b^2;\\qquad (\\dfrac{p}{q})^2=\\dfrac{p^2}{q^2},\\quad q\\neq 0\\)",
+        explicacion: "Elegimos \\(a=\\dfrac{x}{2}\\) y \\(b=3\\). El primer cuadrado es \\((\\dfrac{x}{2})^2=\\dfrac{x^2}{4}\\). El doble producto es \\(2(\\dfrac{x}{2})(3)=3x\\). El segundo cuadrado es \\(3^2=9\\). Sumamos: \\(\\boxed{\\dfrac{x^2}{4}+3x+9}\\). ✓"
+    },
+    {
+        pregunta: "Nivel intermedio. Desarrolla: \\((2x^2-3y)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(4x^4-12x^2y+9y^2\\)",
+            "\\(4x^4-6x^2y+9y^2\\)",
+            "\\(4x^2-12x^2y+9y^2\\)"
+        ],
+        respuestaCorrecta: "\\(4x^4-12x^2y+9y^2\\)",
+        formula: "\\((a-b)^2=a^2-2ab+b^2;\\qquad (x^m)^n=x^{mn}\\)",
+        explicacion: "Identificamos \\(a=2x^2\\) y \\(b=3y\\). Aplicamos la fórmula: \\((2x^2)^2-2(2x^2)(3y)+(3y)^2\\). Calculamos \\((2x^2)^2=4x^4\\), el doble producto \\(-2(2x^2)(3y)=-12x^2y\\) y \\((3y)^2=9y^2\\). El resultado es \\(\\boxed{4x^4-12x^2y+9y^2}\\). ✓"
+    },
+    {
+        pregunta: "Nivel intermedio. Desarrolla: \\(\\big(\\dfrac{2a}{3}-\\dfrac{3b}{4}\\big)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{4a^2}{9}-\\dfrac{ab}{2}+\\dfrac{9b^2}{16}\\)",
+            "\\(\\dfrac{4a^2}{9}+ab+\\dfrac{9b^2}{16}\\)",
+            "\\(\\dfrac{4a^2}{9}-ab+\\dfrac{9b^2}{16}\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{4a^2}{9}-ab+\\dfrac{9b^2}{16}\\)",
+        formula: "\\((A-B)^2=A^2-2AB+B^2\\)",
+        explicacion: "Tomamos \\(A=\\dfrac{2a}{3}\\) y \\(B=\\dfrac{3b}{4}\\). Calculamos los cuadrados: \\(A^2=\\dfrac{4a^2}{9}\\) y \\(B^2=\\dfrac{9b^2}{16}\\). El término central es \\(-2AB=-2(\\dfrac{2a}{3})(\\dfrac{3b}{4})=-\\dfrac{12ab}{12}=-ab\\). Por tanto, \\(\\boxed{\\dfrac{4a^2}{9}-ab+\\dfrac{9b^2}{16}}\\). ✓"
+    },
+
+    // NIVEL DIFÍCIL: 3 ejercicios
+    {
+        pregunta: "Nivel difícil. Desarrolla: \\(\\big(\\dfrac{3}{4}x^2y-\\dfrac{2}{5}xy^3\\big)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{9}{16}x^4y^2-\\dfrac{3}{10}x^3y^4+\\dfrac{4}{25}x^2y^6\\)",
+            "\\(\\dfrac{9}{16}x^4y^2-\\dfrac{3}{5}x^3y^4+\\dfrac{4}{25}x^2y^6\\)",
+            "\\(\\dfrac{9}{16}x^4y^2-\\dfrac{3}{5}x^2y^3+\\dfrac{4}{25}x^2y^6\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{9}{16}x^4y^2-\\dfrac{3}{5}x^3y^4+\\dfrac{4}{25}x^2y^6\\)",
+        formula: "\\((A-B)^2=A^2-2AB+B^2;\\qquad (x^m)^n=x^{mn};\\qquad x^m x^n=x^{m+n}\\)",
+        explicacion: "Identificamos \\(A=\\dfrac{3}{4}x^2y\\) y \\(B=\\dfrac{2}{5}xy^3\\). Elevamos el primer monomio al cuadrado: \\(A^2=\\dfrac{9}{16}x^4y^2\\). Calculamos el término central: \\(-2AB=-2(\\dfrac{3}{4})(\\dfrac{2}{5})x^{2+1}y^{1+3}=-\\dfrac{3}{5}x^3y^4\\). El segundo cuadrado es \\(B^2=\\dfrac{4}{25}x^2y^6\\). Reunimos los términos: \\(\\boxed{\\dfrac{9}{16}x^4y^2-\\dfrac{3}{5}x^3y^4+\\dfrac{4}{25}x^2y^6}\\). ✓"
+    },
+    {
+        pregunta: "Nivel difícil. Desarrolla y simplifica, con \\(x\\neq 0\\) y \\(y\\neq 0\\): \\(\\big(\\dfrac{2x^3}{3y^2}+\\dfrac{3y}{4x}\\big)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{4x^6}{9y^4}+\\dfrac{x^2}{y}+\\dfrac{9y^2}{16x^2}\\)",
+            "\\(\\dfrac{4x^6}{9y^4}+\\dfrac{x^2}{2y}+\\dfrac{9y^2}{16x^2}\\)",
+            "\\(\\dfrac{4x^6}{9y^4}+\\dfrac{x^4}{y}+\\dfrac{9y^2}{16x^2}\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{4x^6}{9y^4}+\\dfrac{x^2}{y}+\\dfrac{9y^2}{16x^2}\\)",
+        formula: "\\((A+B)^2=A^2+2AB+B^2;\\qquad \\dfrac{x^m}{x^n}=x^{m-n},\\quad x\\neq 0\\)",
+        explicacion: "Tomamos \\(A=\\dfrac{2x^3}{3y^2}\\) y \\(B=\\dfrac{3y}{4x}\\). Sus cuadrados son \\(A^2=\\dfrac{4x^6}{9y^4}\\) y \\(B^2=\\dfrac{9y^2}{16x^2}\\). El doble producto es \\(2AB=2(\\dfrac{2x^3}{3y^2})(\\dfrac{3y}{4x})=\\dfrac{12x^3y}{12xy^2}=\\dfrac{x^2}{y}\\). Sumamos los tres términos: \\(\\boxed{\\dfrac{4x^6}{9y^4}+\\dfrac{x^2}{y}+\\dfrac{9y^2}{16x^2}}\\). ✓"
+    },
+    {
+        pregunta: "Nivel difícil. Desarrolla y simplifica: \\(\\big(\\dfrac{1}{2}x^n-\\dfrac{3}{4}x^{n+2}\\big)^2\\), donde \\(n\\) es un entero positivo.",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{1}{4}x^{2n}-\\dfrac{3}{4}x^{2n+2}+\\dfrac{9}{16}x^{2n+2}\\)",
+            "\\(\\dfrac{1}{4}x^{2n}-\\dfrac{3}{8}x^{2n+2}+\\dfrac{9}{16}x^{2n+4}\\)",
+            "\\(\\dfrac{1}{4}x^{2n}-\\dfrac{3}{4}x^{2n+2}+\\dfrac{9}{16}x^{2n+4}\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{1}{4}x^{2n}-\\dfrac{3}{4}x^{2n+2}+\\dfrac{9}{16}x^{2n+4}\\)",
+        formula: "\\((A-B)^2=A^2-2AB+B^2;\\qquad (x^m)^2=x^{2m};\\qquad x^p x^q=x^{p+q}\\)",
+        explicacion: "Identificamos \\(A=\\dfrac{1}{2}x^n\\) y \\(B=\\dfrac{3}{4}x^{n+2}\\). El primer cuadrado es \\(A^2=\\dfrac{1}{4}x^{2n}\\). El término central es \\(-2AB=-2(\\dfrac{1}{2})(\\dfrac{3}{4})x^{n+(n+2)}=-\\dfrac{3}{4}x^{2n+2}\\). El último cuadrado es \\(B^2=\\dfrac{9}{16}x^{2(n+2)}=\\dfrac{9}{16}x^{2n+4}\\). Por tanto, \\(\\boxed{\\dfrac{1}{4}x^{2n}-\\dfrac{3}{4}x^{2n+2}+\\dfrac{9}{16}x^{2n+4}}\\). ✓"
+    }
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,4);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+// Guardamos la última respuesta seleccionada.
+question.selectedAnswer=option;
+
+// Quitamos el resaltado anterior para marcar solo la opción actual.
+optionsContainer.querySelectorAll("li").forEach(item=>{
+item.style.backgroundColor="";
+});
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+fetch("https://script.google.com/macros/s/AKfycbzOKB58r0TLy1oxfovid9iantpOAYAXvaH1vkswJaBjIMwkX_Q4G6fm-bdxr5Myoq3Z/exec",{
+method:"POST",
+body:JSON.stringify({
+titulo:testTitle,
+nombre:studentName,
+aciertos:score,
+errores:errores,
+total:total,
+porcentaje:porcentaje,
+preguntas:resumenPreguntas
+})
+});
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
