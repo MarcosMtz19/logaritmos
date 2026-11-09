@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<section id="evidence" style="display:none;max-width:950px;margin:20px auto;background:white;padding:20px;">
+<h2>Adjunta tus procedimientos</h2>
+<p>Agrega al menos una foto por pregunta. Puedes seleccionar varias a la vez. Formatos: JPG, PNG o WEBP; máximo 5 fotos por pregunta, 5 MB por foto y 20 MB en total.</p>
+<p>Ahora puedes abrir tu cámara o galería sin que se reinicie el test.</p>
+<div id="photo-fields"></div>
+<button id="send-evidence" onclick="sendEvidence()">Enviar test y procedimientos</button>
+<p id="upload-status" role="status" aria-live="polite"></p>
+</section>
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+let submitting=false;
+let sent=false;
+const deliveryId=crypto.randomUUID();
+
+const testTitle = "Examen simulacro 2do Parcial";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+    // NIVEL FÁCIL: 3 ejercicios
+    {
+        pregunta: "Nivel fácil. Factoriza completamente por factor común: \\(6x+12\\)",
+        imagen: "",
+        opciones: [
+            "\\(6(x+2)\\)",
+            "\\(6(x+12)\\)",
+            "\\(3(x+4)\\)"
+        ],
+        respuestaCorrecta: "\\(6(x+2)\\)",
+        formula: "\\(AB+AC=A(B+C)\\)",
+        explicacion: "El máximo factor común de los coeficientes \\(6\\) y \\(12\\) es \\(6\\). Dividimos cada término entre él: \\(6x\\div 6=x\\) y \\(12\\div 6=2\\). Por tanto, \\(\\boxed{6(x+2)}\\). Comprobamos distribuyendo: \\(6(x+2)=6x+12\\). ✓"
+    },
+    {
+        pregunta: "Nivel fácil. Factoriza completamente por factor común: \\(8a^2-4a\\)",
+        imagen: "",
+        opciones: [
+            "\\(4a(2a+1)\\)",
+            "\\(4a(2a-1)\\)",
+            "\\(4a^2(2a-1)\\)"
+        ],
+        respuestaCorrecta: "\\(4a(2a-1)\\)",
+        formula: "\\(AB-AC=A(B-C)\\)",
+        explicacion: "El máximo factor común de \\(8\\) y \\(4\\) es \\(4\\). La variable común es \\(a\\), cuyo menor exponente es \\(1\\). Extraemos \\(4a\\): \\(8a^2\\div 4a=2a\\) y \\(-4a\\div 4a=-1\\). Resultado: \\(\\boxed{4a(2a-1)}\\). ✓"
+    },
+    {
+        pregunta: "Nivel fácil. Factoriza completamente por factor común: \\(15xy+10x\\)",
+        imagen: "",
+        opciones: [
+            "\\(5xy(3+2x)\\)",
+            "\\(5x(3y+10)\\)",
+            "\\(5x(3y+2)\\)"
+        ],
+        respuestaCorrecta: "\\(5x(3y+2)\\)",
+        formula: "\\(AB+AC=A(B+C)\\)",
+        explicacion: "El máximo factor común numérico es \\(5\\) y la variable presente en ambos términos es \\(x\\). Extraemos \\(5x\\). Los cocientes son \\(15xy\\div 5x=3y\\) y \\(10x\\div 5x=2\\). Así obtenemos \\(\\boxed{5x(3y+2)}\\). La variable \\(y\\) no se extrae porque no aparece en todos los términos. ✓"
+    },
+
+    // NIVEL INTERMEDIO: 4 ejercicios
+    {
+        pregunta: "Nivel intermedio. Factoriza completamente por factor común: \\(18x^3y^2-12x^2y^3+6x^2y\\)",
+        imagen: "",
+        opciones: [
+            "\\(6x^2y(3xy-2y^2+1)\\)",
+            "\\(6x^2y(3x-2y+1)\\)",
+            "\\(6xy(3xy-2y^2+1)\\)"
+        ],
+        respuestaCorrecta: "\\(6x^2y(3xy-2y^2+1)\\)",
+        formula: "\\(AB+AC+AD=A(B+C+D)\\)",
+        explicacion: "El máximo factor común de \\(18,12,6\\) es \\(6\\). Tomamos los menores exponentes comunes: \\(x^2\\) y \\(y\\). El factor común es \\(6x^2y\\). Dividimos cada término entre él y obtenemos \\(3xy\\), \\(-2y^2\\) y \\(1\\). Resultado: \\(\\boxed{6x^2y(3xy-2y^2+1)}\\). ✓"
+    },
+    {
+        pregunta: "Nivel intermedio. Factoriza extrayendo el factor común negativo de mayor magnitud: \\(-14a^4b+21a^3b^2-7a^2b\\)",
+        imagen: "",
+        opciones: [
+            "\\(-7a^2b(2a^2+3ab-1)\\)",
+            "\\(-7a^2b(2a^2-3ab+1)\\)",
+            "\\(-7a^2b(2a^2-3ab-1)\\)"
+        ],
+        respuestaCorrecta: "\\(-7a^2b(2a^2-3ab+1)\\)",
+        formula: "\\(-AB+AC-AD=-A(B-C+D)\\)",
+        explicacion: "El factor común solicitado es \\(-7a^2b\\). Dividimos: \\(-14a^4b\\div(-7a^2b)=2a^2\\), \\(21a^3b^2\\div(-7a^2b)=-3ab\\) y \\(-7a^2b\\div(-7a^2b)=1\\). Al extraer un factor negativo cambian los signos de los términos dentro del paréntesis. Obtenemos \\(\\boxed{-7a^2b(2a^2-3ab+1)}\\). ✓"
+    },
+    {
+        pregunta: "Nivel intermedio. Factoriza extrayendo \\(\\dfrac{1}{4}x^2\\): \\(\\dfrac{3}{4}x^4-\\dfrac{5}{2}x^3+\\dfrac{1}{4}x^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{1}{4}x^2(3x^2-5x+1)\\)",
+            "\\(\\dfrac{1}{4}x^2(3x^2-10x+4)\\)",
+            "\\(\\dfrac{1}{4}x^2(3x^2-10x+1)\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{1}{4}x^2(3x^2-10x+1)\\)",
+        formula: "\\(AB+AC+AD=A(B+C+D);\\qquad \\dfrac{x^m}{x^n}=x^{m-n}\\)",
+        explicacion: "Dividimos cada término entre el factor indicado. Primero: \\(\\dfrac{3}{4}x^4\\div(\\dfrac{1}{4}x^2)=3x^2\\). Segundo: \\(-\\dfrac{5}{2}x^3\\div(\\dfrac{1}{4}x^2)=-10x\\). Tercero: \\(\\dfrac{1}{4}x^2\\div(\\dfrac{1}{4}x^2)=1\\). Resultado: \\(\\boxed{\\dfrac{1}{4}x^2(3x^2-10x+1)}\\). ✓"
+    },
+    {
+        pregunta: "Nivel intermedio. Factoriza por factor común: \\(3x(x+2)-5(x+2)\\)",
+        imagen: "",
+        opciones: [
+            "\\((x+2)(3x-5)\\)",
+            "\\((x+2)(3x+5)\\)",
+            "\\((x+2)(3x-5x)\\)"
+        ],
+        respuestaCorrecta: "\\((x+2)(3x-5)\\)",
+        formula: "\\(AB+CB=B(A+C)\\)",
+        explicacion: "El factor común puede ser un polinomio completo. Aquí, \\((x+2)\\) aparece en ambos términos. Lo extraemos y conservamos los factores restantes: \\(3x\\) y \\(-5\\). Así, \\(3x(x+2)-5(x+2)=\\boxed{(x+2)(3x-5)}\\). ✓"
+    },
+
+    // NIVEL DIFÍCIL: 3 ejercicios
+    {
+        pregunta: "Nivel difícil. Factoriza extrayendo \\(\\dfrac{3}{20}a^3b^2\\): \\(\\dfrac{9}{10}a^5b^3-\\dfrac{3}{4}a^4b^5+\\dfrac{21}{20}a^3b^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{3}{20}a^3b^2(6a^2b-5ab^2+7)\\)",
+            "\\(\\dfrac{3}{20}a^3b^2(6a^2b-5ab^3+7)\\)",
+            "\\(\\dfrac{3}{20}a^3b^2(3a^2b-5ab^3+7)\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{3}{20}a^3b^2(6a^2b-5ab^3+7)\\)",
+        formula: "\\(AB+AC+AD=A(B+C+D);\\qquad \\dfrac{a^mb^r}{a^nb^s}=a^{m-n}b^{r-s}\\)",
+        explicacion: "Dividimos cada término entre \\(\\dfrac{3}{20}a^3b^2\\). Los coeficientes resultan \\(\\dfrac{9}{10}\\div\\dfrac{3}{20}=6\\), \\(-\\dfrac{3}{4}\\div\\dfrac{3}{20}=-5\\) y \\(\\dfrac{21}{20}\\div\\dfrac{3}{20}=7\\). Restamos exponentes: el primer término deja \\(a^2b\\), el segundo deja \\(ab^3\\) y el tercero deja \\(1\\). Resultado: \\(\\boxed{\\dfrac{3}{20}a^3b^2(6a^2b-5ab^3+7)}\\). ✓"
+    },
+    {
+        pregunta: "Nivel difícil. Factoriza completamente por factor común: \\(12x^{3n+2}y^{2n+1}-18x^{2n+1}y^{3n+2}+6x^{n+1}y^{n+1}\\), donde \\(n\\) es un entero positivo.",
+        imagen: "",
+        opciones: [
+            "\\(6x^{n+1}y^{n+1}(2x^{2n+1}y^n-3x^ny^{2n}+1)\\)",
+            "\\(6x^{n+1}y^{n+1}(2x^{2n}y^n-3x^ny^{2n+1}+1)\\)",
+            "\\(6x^{n+1}y^{n+1}(2x^{2n+1}y^n-3x^ny^{2n+1}+1)\\)"
+        ],
+        respuestaCorrecta: "\\(6x^{n+1}y^{n+1}(2x^{2n+1}y^n-3x^ny^{2n+1}+1)\\)",
+        formula: "\\(AB+AC+AD=A(B+C+D);\\qquad \\dfrac{x^r}{x^s}=x^{r-s}\\)",
+        explicacion: "El máximo factor numérico común es \\(6\\). Como \\(n\\) es positivo, los menores exponentes de ambas variables son \\(n+1\\). Extraemos \\(6x^{n+1}y^{n+1}\\). En el primer término restamos \\((3n+2)-(n+1)=2n+1\\) para \\(x\\) y \\((2n+1)-(n+1)=n\\) para \\(y\\). En el segundo obtenemos \\(x^n y^{2n+1}\\). El tercer término deja \\(1\\). Resultado: \\(\\boxed{6x^{n+1}y^{n+1}(2x^{2n+1}y^n-3x^ny^{2n+1}+1)}\\). ✓"
+    },
+    {
+        pregunta: "Nivel difícil. Factoriza completamente por factor común: \\(8x^3(x-1)^3-12x^2(x-1)^2+4x(x-1)^2\\)",
+        imagen: "",
+        opciones: [
+            "\\(4x(x-1)^2(2x^3-2x^2-3x+1)\\)",
+            "\\(4x(x-1)^2(2x^2-3x+1)\\)",
+            "\\(4x(x-1)^2(2x^3-2x^2+3x+1)\\)"
+        ],
+        respuestaCorrecta: "\\(4x(x-1)^2(2x^3-2x^2-3x+1)\\)",
+        formula: "\\(AB+AC+AD=A(B+C+D);\\qquad \\dfrac{(x-1)^r}{(x-1)^s}=(x-1)^{r-s}\\)",
+        explicacion: "El máximo factor común numérico es \\(4\\). También son comunes \\(x\\) y \\((x-1)^2\\). Extraemos \\(4x(x-1)^2\\). Los cocientes son \\(2x^2(x-1)\\), \\(-3x\\) y \\(1\\). Así obtenemos \\(4x(x-1)^2[2x^2(x-1)-3x+1]\\). Desarrollamos únicamente dentro del corchete: \\(2x^2(x-1)=2x^3-2x^2\\). Resultado: \\(\\boxed{4x(x-1)^2(2x^3-2x^2-3x+1)}\\). ✓"
+    }
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,4);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+// Guardamos la última respuesta seleccionada.
+question.selectedAnswer=option;
+
+// Quitamos el resaltado anterior para marcar solo la opción actual.
+optionsContainer.querySelectorAll("li").forEach(item=>{
+item.style.backgroundColor="";
+});
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+if(questions.some(q=>q.selectedAnswer===null)){
+alert("Responde todas las preguntas antes de terminar.");return;
+}
+testStarted=false;
+document.getElementById("quiz-container").style.display="none";
+document.getElementById("evidence").style.display="block";
+const fields=document.getElementById("photo-fields");
+fields.innerHTML="";
+questions.forEach((q,i)=>{
+const box=document.createElement("div");
+box.className="question-container";
+box.innerHTML=`<h3>Procedimiento de la pregunta ${i+1}</h3><div>${q.pregunta}</div>
+<label for="photos-${i}">Fotos de esta pregunta:</label>
+<input id="photos-${i}" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+<p id="names-${i}"></p>`;
+fields.appendChild(box);
+box.querySelector("input").addEventListener("change",event=>{
+document.getElementById(`names-${i}`).textContent=Array.from(event.target.files).map(f=>f.name).join(", ");
+});
+});
+if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+}
+
+// El HTML puede abrirse directamente desde el equipo.
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyusE2nSHSQ5O2rHs7MnGbE-CA5NqcDMFBJG-FQS3lPrxw2DSBauExiGze96tWP0gOK/exec";
+function sendToScript(payload){
+return new Promise((resolve,reject)=>{
+const token=crypto.randomUUID();
+const frame=document.createElement("iframe");
+frame.name="cvc_"+token.replace(/-/g,"");
+frame.style.display="none";
+frame.title="Confirmación del envío";
+const form=document.createElement("form");
+form.method="POST";form.action=SCRIPT_URL;form.target=frame.name;
+form.enctype="application/x-www-form-urlencoded";form.style.display="none";
+for(const [name,value] of Object.entries({payload:JSON.stringify(payload),token})){
+const input=document.createElement("input");input.type="hidden";input.name=name;input.value=value;form.appendChild(input);
+}
+function clean(){clearTimeout(timer);window.removeEventListener("message",receive);form.remove();frame.remove();}
+function receive(event){
+const data=event.data;
+if(!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)*googleusercontent\.com)$/.test(event.origin))return;
+if(!data||data.channel!=="CVC_ENTREGA"||data.token!==token)return;
+clean();data.ok?resolve(data):reject(new Error(data.error||"No se pudo guardar la entrega."));
+}
+const timer=setTimeout(()=>{clean();reject(new Error("No se recibió confirmación. Conserva esta página abierta y reintenta con el mismo botón. Comprueba que la implementación permita acceso a cualquier persona y que el navegador no bloquee el envío. Si ya se guardó, el reintento reutiliza la misma entrega."));},240000);
+window.addEventListener("message",receive);
+document.body.append(frame,form);form.submit();
+});
+}
+
+function readPhoto(file){
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onload=()=>resolve(String(reader.result).split(",")[1]);
+reader.onerror=()=>reject(new Error("No se pudo leer "+file.name));
+reader.readAsDataURL(file);
+});
+}
+
+async function sendEvidence(){
+if(submitting||sent)return;
+const status=document.getElementById("upload-status");
+const button=document.getElementById("send-evidence");
+const inputs=Array.from(document.querySelectorAll('#photo-fields input'));
+try{
+let bytes=0;
+for(let i=0;i<inputs.length;i++){
+const files=Array.from(inputs[i].files);
+if(!files.length||files.length>5)throw new Error(`Adjunta entre 1 y 5 fotos para la pregunta ${i+1}.`);
+for(const f of files){
+if(!["image/jpeg","image/png","image/webp"].includes(f.type))throw new Error("Usa fotos JPG, PNG o WEBP. Convierte las fotos HEIC a JPG.");
+if(!f.size||f.size>5*1024*1024)throw new Error("Cada foto debe pesar entre 1 byte y 5 MB.");
+bytes+=f.size;
+}
+}
+if(bytes>20*1024*1024)throw new Error("Las fotos superan 20 MB en total. Reduce su tamaño.");
+submitting=true;button.disabled=true;inputs.forEach(input=>input.disabled=true);
+status.textContent="Preparando y enviando tus procedimientos. Mantén esta página abierta…";
+const fotos=[];
+for(let i=0;i<inputs.length;i++)for(const f of inputs[i].files){
+fotos.push({numero:i+1,nombre:f.name,tipo:f.type,base64:await readPhoto(f)});
+}
+const payload={entregaId:deliveryId,titulo:testTitle,nombre:studentName,fotos,
+preguntas:questions.map((q,i)=>({numero:i+1,pregunta:q.pregunta,imagen:q.imagen||"",
+respuestaSeleccionada:q.selectedAnswer,respuestaCorrecta:q.respuestaCorrecta,
+formula:q.formula||"N/A",explicacion:q.explicacion||"",
+resultado:q.selectedAnswer===q.respuestaCorrecta?"Correcta":"Incorrecta"}))};
+const reply=await sendToScript(payload);
+if(!reply||!reply.ok)throw new Error("No se confirmó el guardado. Intenta enviar otra vez.");
+sent=true;
+document.getElementById("evidence").style.display="none";
+showResults();
+const message=document.createElement("p");
+message.textContent=reply.aviso||"Test y procedimientos guardados correctamente.";
+document.getElementById("result").prepend(message);
+}catch(error){status.textContent=error.message||String(error);}
+finally{submitting=false;button.disabled=sent;inputs.forEach(input=>input.disabled=sent);}
+}
+
+function showResults(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
