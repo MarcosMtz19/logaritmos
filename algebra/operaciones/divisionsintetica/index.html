@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<section id="evidence" style="display:none;max-width:950px;margin:20px auto;background:white;padding:20px;">
+<h2>Adjunta tus procedimientos</h2>
+<p>Agrega al menos una foto por pregunta. Puedes seleccionar varias a la vez. Formatos: JPG, PNG o WEBP; máximo 5 fotos por pregunta, 5 MB por foto y 20 MB en total.</p>
+<p>Ahora puedes abrir tu cámara o galería sin que se reinicie el test.</p>
+<div id="photo-fields"></div>
+<button id="send-evidence" onclick="sendEvidence()">Enviar test y procedimientos</button>
+<p id="upload-status" role="status" aria-live="polite"></p>
+</section>
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+let submitting=false;
+let sent=false;
+const deliveryId=crypto.randomUUID();
+
+const testTitle = "División de Polinomios por división Sintética";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{x^2+5x+6}{x+2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(x+3\\)",
+            "\\(x+7\\)",
+            "\\(x-3\\)"
+        ],
+        respuestaCorrecta: "\\(x+3\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Usamos \\(c=-2\\) y los coeficientes \\(1,5,6\\). Bajamos \\(1\\); calculamos \\(5+(-2)(1)=3\\) y después \\(6+(-2)(3)=0\\). La fila final es \\(1,3,0\\). El cociente es \\(x+3\\) y el residuo es cero. Resultado: \\(\\boxed{x+3}\\), con \\(x\\neq -2\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{x^2-3x+4}{x-1}\\)",
+        imagen: "",
+        opciones: [
+            "\\(x-4+\\dfrac{8}{x-1}\\)",
+            "\\(x-2+\\dfrac{2}{x-1}\\)",
+            "\\(x-2\\)"
+        ],
+        respuestaCorrecta: "\\(x-2+\\dfrac{2}{x-1}\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Usamos \\(c=1\\) y los coeficientes \\(1,-3,4\\). Bajamos \\(1\\); calculamos \\(-3+1=-2\\) y \\(4-2=2\\). La fila final es \\(1,-2,2\\). El cociente es \\(x-2\\) y el residuo es \\(2\\). Escribimos el residuo sobre el divisor: \\(\\boxed{x-2+\\dfrac{2}{x-1}}\\), con \\(x\\neq 1\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{x^3-6x^2+11x-6}{x-1}\\)",
+        imagen: "",
+        opciones: [
+            "\\(x^2-7x+18\\)",
+            "\\(x^2-5x+6+\\dfrac{6}{x-1}\\)",
+            "\\(x^2-5x+6\\)"
+        ],
+        respuestaCorrecta: "\\(x^2-5x+6\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Usamos \\(c=1\\) y los coeficientes \\(1,-6,11,-6\\). Bajamos \\(1\\) y calculamos sucesivamente: \\(-6+1=-5\\), \\(11-5=6\\) y \\(-6+6=0\\). La fila final es \\(1,-5,6,0\\). Como el residuo es cero, el resultado es \\(\\boxed{x^2-5x+6}\\), con \\(x\\neq 1\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{2x^3+3x^2-5x+4}{x+2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(2x^2-x-3+\\dfrac{10}{x+2}\\)",
+            "\\(2x^2+7x+9+\\dfrac{22}{x+2}\\)",
+            "\\(2x^2-x-3-\\dfrac{2}{x+2}\\)"
+        ],
+        respuestaCorrecta: "\\(2x^2-x-3+\\dfrac{10}{x+2}\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Usamos \\(c=-2\\) y los coeficientes \\(2,3,-5,4\\). Bajamos \\(2\\); calculamos \\(3-4=-1\\), \\(-5+2=-3\\) y \\(4+6=10\\). La fila final es \\(2,-1,-3,10\\). El cociente es \\(2x^2-x-3\\) y el residuo es \\(10\\). Resultado: \\(\\boxed{2x^2-x-3+\\dfrac{10}{x+2}}\\), con \\(x\\neq -2\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{x^3-4x+3}{x-1}\\)",
+        imagen: "",
+        opciones: [
+            "\\(x^2-3x+\\dfrac{3}{x-1}\\)",
+            "\\(x^2+x-3\\)",
+            "\\(x^2-x-3\\)"
+        ],
+        respuestaCorrecta: "\\(x^2+x-3\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Incluimos el término ausente \\(0x^2\\). Usamos \\(c=1\\) y los coeficientes \\(1,0,-4,3\\). Bajamos \\(1\\); calculamos \\(0+1=1\\), \\(-4+1=-3\\) y \\(3-3=0\\). La fila final es \\(1,1,-3,0\\). La división es exacta y obtenemos \\(\\boxed{x^2+x-3}\\), con \\(x\\neq 1\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{3x^4-2x^3+5x-7}{x-2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(3x^3+4x^2+8x+21\\)",
+            "\\(3x^3+4x^2+13x+19+\\dfrac{31}{x-2}\\)",
+            "\\(3x^3+4x^2+8x+21+\\dfrac{35}{x-2}\\)"
+        ],
+        respuestaCorrecta: "\\(3x^3+4x^2+8x+21+\\dfrac{35}{x-2}\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Incluimos el coeficiente cero de \\(x^2\\): \\(3,-2,0,5,-7\\). Usamos \\(c=2\\). Bajamos \\(3\\) y calculamos \\(-2+6=4\\), \\(0+8=8\\), \\(5+16=21\\) y \\(-7+42=35\\). La fila final es \\(3,4,8,21,35\\). Resultado: \\(\\boxed{3x^3+4x^2+8x+21+\\dfrac{35}{x-2}}\\), con \\(x\\neq 2\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{2x^4-3x^3-5x^2+9x-3}{x-1}\\)",
+        imagen: "",
+        opciones: [
+            "\\(2x^3-x^2-6x+3\\)",
+            "\\(2x^3-x^2-6x+3+\\dfrac{6}{x-1}\\)",
+            "\\(2x^3-5x^2+9\\)"
+        ],
+        respuestaCorrecta: "\\(2x^3-x^2-6x+3\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Usamos \\(c=1\\) con los coeficientes \\(2,-3,-5,9,-3\\). Bajamos \\(2\\) y calculamos \\(-3+2=-1\\), \\(-5-1=-6\\), \\(9-6=3\\) y \\(-3+3=0\\). La fila final es \\(2,-1,-6,3,0\\). Como el residuo es cero, obtenemos \\(\\boxed{2x^3-x^2-6x+3}\\), con \\(x\\neq 1\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{x^4-2x^2+5}{x+1}\\)",
+        imagen: "",
+        opciones: [
+            "\\(x^3+x^2-x-1+\\dfrac{4}{x+1}\\)",
+            "\\(x^3-x^2-x+1+\\dfrac{4}{x+1}\\)",
+            "\\(x^3-x^2-x+1+\\dfrac{6}{x+1}\\)"
+        ],
+        respuestaCorrecta: "\\(x^3-x^2-x+1+\\dfrac{4}{x+1}\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Incluimos ceros en los términos ausentes: \\(1,0,-2,0,5\\). Usamos \\(c=-1\\). Bajamos \\(1\\) y calculamos \\(0-1=-1\\), \\(-2+1=-1\\), \\(0+1=1\\) y \\(5-1=4\\). La fila final es \\(1,-1,-1,1,4\\). Resultado: \\(\\boxed{x^3-x^2-x+1+\\dfrac{4}{x+1}}\\), con \\(x\\neq -1\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{4x^3-4x^2-7x-2}{x-2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(4x^2+4x+1+\\dfrac{4}{x-2}\\)",
+            "\\(4x^2-12x+17\\)",
+            "\\(4x^2+4x+1\\)"
+        ],
+        respuestaCorrecta: "\\(4x^2+4x+1\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Usamos \\(c=2\\) y los coeficientes \\(4,-4,-7,-2\\). Bajamos \\(4\\); calculamos \\(-4+8=4\\), \\(-7+8=1\\) y \\(-2+2=0\\). La fila final es \\(4,4,1,0\\). La división es exacta: \\(\\boxed{4x^2+4x+1}\\), con \\(x\\neq 2\\). ✓"
+    },
+    {
+        pregunta: "Divide mediante división sintética: \\(\\dfrac{2x^5-3x^4+x^2-5x+6}{x+1}\\)",
+        imagen: "",
+        opciones: [
+            "\\(2x^4-5x^3+5x^2-4x-1+\\dfrac{7}{x+1}\\)",
+            "\\(2x^4-5x^3+5x^2-4x-1+\\dfrac{5}{x+1}\\)",
+            "\\(2x^4-x^3-x^2-5+\\dfrac{1}{x+1}\\)"
+        ],
+        respuestaCorrecta: "\\(2x^4-5x^3+5x^2-4x-1+\\dfrac{7}{x+1}\\)",
+        formula: "\\(\\dfrac{P(x)}{x-c}=Q(x)+\\dfrac{R}{x-c}\\)",
+        explicacion: "Incluimos el término ausente \\(0x^3\\): los coeficientes son \\(2,-3,0,1,-5,6\\). Usamos \\(c=-1\\). Bajamos \\(2\\) y calculamos \\(-3-2=-5\\), \\(0+5=5\\), \\(1-5=-4\\), \\(-5+4=-1\\) y \\(6+1=7\\). La fila final es \\(2,-5,5,-4,-1,7\\). Resultado: \\(\\boxed{2x^4-5x^3+5x^2-4x-1+\\dfrac{7}{x+1}}\\), con \\(x\\neq -1\\). ✓"
+    }
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,4);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+// Guardamos la última respuesta seleccionada.
+question.selectedAnswer=option;
+
+// Quitamos el resaltado anterior para marcar solo la opción actual.
+optionsContainer.querySelectorAll("li").forEach(item=>{
+item.style.backgroundColor="";
+});
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+MathJax.typesetPromise();
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+if(questions.some(q=>q.selectedAnswer===null)){
+alert("Responde todas las preguntas antes de terminar.");return;
+}
+testStarted=false;
+document.getElementById("quiz-container").style.display="none";
+document.getElementById("evidence").style.display="block";
+const fields=document.getElementById("photo-fields");
+fields.innerHTML="";
+questions.forEach((q,i)=>{
+const box=document.createElement("div");
+box.className="question-container";
+box.innerHTML=`<h3>Procedimiento de la pregunta ${i+1}</h3><div>${q.pregunta}</div>
+<label for="photos-${i}">Fotos de esta pregunta:</label>
+<input id="photos-${i}" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+<p id="names-${i}"></p>`;
+fields.appendChild(box);
+box.querySelector("input").addEventListener("change",event=>{
+document.getElementById(`names-${i}`).textContent=Array.from(event.target.files).map(f=>f.name).join(", ");
+});
+});
+if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+}
+
+// El HTML puede abrirse directamente desde el equipo.
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyusE2nSHSQ5O2rHs7MnGbE-CA5NqcDMFBJG-FQS3lPrxw2DSBauExiGze96tWP0gOK/exec";
+function sendToScript(payload){
+return new Promise((resolve,reject)=>{
+const token=crypto.randomUUID();
+const frame=document.createElement("iframe");
+frame.name="cvc_"+token.replace(/-/g,"");
+frame.style.display="none";
+frame.title="Confirmación del envío";
+const form=document.createElement("form");
+form.method="POST";form.action=SCRIPT_URL;form.target=frame.name;
+form.enctype="application/x-www-form-urlencoded";form.style.display="none";
+for(const [name,value] of Object.entries({payload:JSON.stringify(payload),token})){
+const input=document.createElement("input");input.type="hidden";input.name=name;input.value=value;form.appendChild(input);
+}
+function clean(){clearTimeout(timer);window.removeEventListener("message",receive);form.remove();frame.remove();}
+function receive(event){
+const data=event.data;
+if(!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)*googleusercontent\.com)$/.test(event.origin))return;
+if(!data||data.channel!=="CVC_ENTREGA"||data.token!==token)return;
+clean();data.ok?resolve(data):reject(new Error(data.error||"No se pudo guardar la entrega."));
+}
+const timer=setTimeout(()=>{clean();reject(new Error("No se recibió confirmación. Conserva esta página abierta y reintenta con el mismo botón. Comprueba que la implementación permita acceso a cualquier persona y que el navegador no bloquee el envío. Si ya se guardó, el reintento reutiliza la misma entrega."));},240000);
+window.addEventListener("message",receive);
+document.body.append(frame,form);form.submit();
+});
+}
+
+function readPhoto(file){
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onload=()=>resolve(String(reader.result).split(",")[1]);
+reader.onerror=()=>reject(new Error("No se pudo leer "+file.name));
+reader.readAsDataURL(file);
+});
+}
+
+async function sendEvidence(){
+if(submitting||sent)return;
+const status=document.getElementById("upload-status");
+const button=document.getElementById("send-evidence");
+const inputs=Array.from(document.querySelectorAll('#photo-fields input'));
+try{
+let bytes=0;
+for(let i=0;i<inputs.length;i++){
+const files=Array.from(inputs[i].files);
+if(!files.length||files.length>5)throw new Error(`Adjunta entre 1 y 5 fotos para la pregunta ${i+1}.`);
+for(const f of files){
+if(!["image/jpeg","image/png","image/webp"].includes(f.type))throw new Error("Usa fotos JPG, PNG o WEBP. Convierte las fotos HEIC a JPG.");
+if(!f.size||f.size>5*1024*1024)throw new Error("Cada foto debe pesar entre 1 byte y 5 MB.");
+bytes+=f.size;
+}
+}
+if(bytes>20*1024*1024)throw new Error("Las fotos superan 20 MB en total. Reduce su tamaño.");
+submitting=true;button.disabled=true;inputs.forEach(input=>input.disabled=true);
+status.textContent="Preparando y enviando tus procedimientos. Mantén esta página abierta…";
+const fotos=[];
+for(let i=0;i<inputs.length;i++)for(const f of inputs[i].files){
+fotos.push({numero:i+1,nombre:f.name,tipo:f.type,base64:await readPhoto(f)});
+}
+const payload={entregaId:deliveryId,titulo:testTitle,nombre:studentName,fotos,
+preguntas:questions.map((q,i)=>({numero:i+1,pregunta:q.pregunta,imagen:q.imagen||"",
+respuestaSeleccionada:q.selectedAnswer,respuestaCorrecta:q.respuestaCorrecta,
+formula:q.formula||"N/A",explicacion:q.explicacion||"",
+resultado:q.selectedAnswer===q.respuestaCorrecta?"Correcta":"Incorrecta"}))};
+const reply=await sendToScript(payload);
+if(!reply||!reply.ok)throw new Error("No se confirmó el guardado. Intenta enviar otra vez.");
+sent=true;
+document.getElementById("evidence").style.display="none";
+showResults();
+const message=document.createElement("p");
+message.textContent=reply.aviso||"Test y procedimientos guardados correctamente.";
+document.getElementById("result").prepend(message);
+}catch(error){status.textContent=error.message||String(error);}
+finally{submitting=false;button.disabled=sent;inputs.forEach(input=>input.disabled=sent);}
+}
+
+function showResults(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+MathJax.typesetPromise();
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
