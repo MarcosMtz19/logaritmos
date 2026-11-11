@@ -113,6 +113,11 @@ button{
 <p>Ahora puedes abrir tu cámara o galería sin que se reinicie el test.</p>
 <div id="photo-fields"></div>
 <button id="send-evidence" onclick="sendEvidence()">Enviar test y procedimientos</button>
+<div id="upload-progress-panel" hidden style="margin-top:20px;padding:18px;background:#f1f8f4;border-radius:10px;">
+<label for="upload-progress" id="progress-label" style="display:block;font-weight:bold;margin-bottom:8px;">Preparando fotos: 0 %</label>
+<progress id="upload-progress" max="100" value="0" style="width:100%;height:26px;accent-color:#218c52;"></progress>
+<p id="progress-detail" style="margin-bottom:0;"></p>
+</div>
 <p id="upload-status" role="status" aria-live="polite"></p>
 </section>
 <div id="result"></div>
@@ -277,7 +282,6 @@ const allQuestions = [
         explicacion: "Dividimos: \\(29400\\div 2=14700\\), \\(14700\\div 2=7350\\), \\(7350\\div 2=3675\\), \\(3675\\div 3=1225\\), \\(1225\\div 5=245\\), \\(245\\div 5=49\\), \\(49\\div 7=7\\) y \\(7\\div 7=1\\). Resultado: \\(29400=\\boxed{2^3\\cdot 3\\cdot 5^2\\cdot 7^2}\\). Comprobamos: \\(8\\cdot 3\\cdot 25\\cdot 49=29400\\). ✓"
     }
 ];
-
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
 .slice(0,4);
@@ -343,7 +347,7 @@ optionsContainer.appendChild(li);
 document.getElementById("next-question").style.display="none";
 document.getElementById("finish-test").style.display="none";
 
-MathJax.typesetPromise();
+if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(console.error);
 }
 
 function loadNextQuestion(){
@@ -374,7 +378,7 @@ files.length>5 ? "Seleccionaste "+files.length+" fotos. Selecciona nuevamente un
 files.length+" foto(s): "+files.map(f=>f.name).join(", ");
 });
 
-if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+if(window.MathJax && MathJax.typesetPromise) if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(console.error);
 }
 
 // El HTML puede abrirse directamente desde el equipo.
@@ -414,44 +418,112 @@ reader.readAsDataURL(file);
 });
 }
 
+function showUploadProgress(value, label, detail){
+const panel=document.getElementById("upload-progress-panel");
+const bar=document.getElementById("upload-progress");
+panel.hidden=false;
+if(value===null)bar.removeAttribute("value");
+else bar.value=value;
+document.getElementById("progress-label").textContent=label;
+document.getElementById("progress-detail").textContent=detail||"";
+}
+
+const photoCache=new WeakMap();
+function photoBlobAsDataURL(blob){
+return new Promise((resolve,reject)=>{
+const r=new FileReader();
+r.onload=()=>resolve(String(r.result));
+r.onerror=()=>reject(new Error("No se pudo leer una foto."));
+r.readAsDataURL(blob);
+});
+}
+
+async function optimizePhoto(file){
+if(photoCache.has(file))return photoCache.get(file);
+let selected=file;
+// Mantiene hasta 2600 píxeles en el lado mayor para conservar la escritura.
+if(file.size>350*1024){
+const url=URL.createObjectURL(file);
+try{
+const image=await new Promise((resolve,reject)=>{
+const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("Imagen no compatible"));img.src=url;
+});
+const scale=Math.min(1,2600/Math.max(image.naturalWidth,image.naturalHeight));
+const canvas=document.createElement("canvas");
+canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+const ctx=canvas.getContext("2d");
+if(!ctx)throw new Error("No se pudo preparar la imagen");
+ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.drawImage(image,0,0,canvas.width,canvas.height);
+const compressed=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.88));
+if(compressed && compressed.size<file.size)selected=compressed;
+canvas.width=canvas.height=1;
+}catch(error){console.warn("Se conserva la foto original:",error);}
+finally{URL.revokeObjectURL(url);}
+}
+const dataURL=await photoBlobAsDataURL(selected);
+const result={nombre:file.name,tipo:selected.type,base64:dataURL.slice(dataURL.indexOf(",")+1),bytes:selected.size};
+photoCache.set(file,result);
+return result;
+}
+
 async function sendEvidence(){
 if(submitting||sent)return;
 const status=document.getElementById("upload-status");
 const button=document.getElementById("send-evidence");
-const inputs=Array.from(document.querySelectorAll('#photo-fields input'));
+const input=document.getElementById("photos-general");
 try{
-let bytes=0;
-for(let i=0;i<inputs.length;i++){
-const files=Array.from(inputs[i].files);
-if(!files.length||files.length>5)throw new Error("Adjunta entre 1 y 5 fotos en total con los procedimientos de todos los ejercicios.");
+const files=Array.from(input.files);
+if(files.length<1||files.length>5)throw new Error("Adjunta entre 1 y 5 fotos en total.");
+let originalBytes=0;
 for(const f of files){
-if(!["image/jpeg","image/png","image/webp"].includes(f.type))throw new Error("Usa fotos JPG, PNG o WEBP. Convierte las fotos HEIC a JPG.");
+if(!["image/jpeg","image/png","image/webp"].includes(f.type))throw new Error("Usa JPG, PNG o WEBP. Convierte HEIC a JPG.");
 if(!f.size||f.size>5*1024*1024)throw new Error("Cada foto debe pesar entre 1 byte y 5 MB.");
-bytes+=f.size;
+originalBytes+=f.size;
 }
-}
-if(bytes>20*1024*1024)throw new Error("Las fotos superan 20 MB en total. Reduce su tamaño.");
-submitting=true;button.disabled=true;inputs.forEach(input=>input.disabled=true);
-status.textContent="Preparando y enviando tus procedimientos. Mantén esta página abierta…";
+if(originalBytes>20*1024*1024)throw new Error("Las fotos superan 20 MB en total.");
+submitting=true;button.disabled=true;input.disabled=true;
+status.textContent="Preparando tus fotos…";
+showUploadProgress(0,"Preparación de fotos: 0 %","Optimizando las imágenes antes de enviarlas.");
 const fotos=[];
-for(let i=0;i<inputs.length;i++)for(const f of inputs[i].files){
-fotos.push({nombre:f.name,tipo:f.type,base64:await readPhoto(f)});
+let optimizedBytes=0;
+for(let i=0;i<files.length;i++){
+const photo=await optimizePhoto(files[i]);
+optimizedBytes+=photo.bytes;
+fotos.push({nombre:photo.nombre,tipo:photo.tipo,base64:photo.base64});
+const percent=Math.round((i+1)/files.length*100);
+showUploadProgress(Math.round(percent*0.3),"Preparación de fotos: "+percent+" % de esta etapa","Foto "+(i+1)+" de "+files.length+" preparada. La barra completa se llenará cuando se confirme el guardado.");
 }
 const payload={entregaId:deliveryId,titulo:testTitle,nombre:studentName,fotos,
 preguntas:questions.map((q,i)=>({numero:i+1,pregunta:q.pregunta,imagen:q.imagen||"",
 respuestaSeleccionada:q.selectedAnswer,respuestaCorrecta:q.respuestaCorrecta,
 formula:q.formula||"N/A",explicacion:q.explicacion||"",
 resultado:q.selectedAnswer===q.respuestaCorrecta?"Correcta":"Incorrecta"}))};
+const ahorro=Math.max(0,Math.round((1-optimizedBytes/originalBytes)*100));
+showUploadProgress(null,"Enviando y guardando…", "Fotos: "+(optimizedBytes/1024/1024).toFixed(2)+" MB"+(ahorro?" ("+ahorro+" % menos peso). ":". ")+"Esperando confirmación de Drive, registro y reporte. Mantén esta página abierta.");
+status.textContent="El envío y procesamiento no informan un porcentaje exacto. La barra seguirá en movimiento hasta recibir la confirmación.";
 const reply=await sendToScript(payload);
 if(!reply||!reply.ok)throw new Error("No se confirmó el guardado. Intenta enviar otra vez.");
 sent=true;
+showUploadProgress(100,"100 % — Entrega confirmada","Mostrando tu puntaje y las respuestas…");
+status.textContent="Entrega guardada correctamente.";
+// Breve pausa visual, solo después de recibir la confirmación del servidor.
+await new Promise(resolve=>setTimeout(resolve,650));
 document.getElementById("evidence").style.display="none";
 showResults();
 const message=document.createElement("p");
-message.textContent=reply.aviso||"Test y procedimientos guardados correctamente.";
+message.textContent=reply.aviso||"100 % — Test y procedimientos guardados correctamente.";
 document.getElementById("result").prepend(message);
-}catch(error){status.textContent=error.message||String(error);}
-finally{submitting=false;button.disabled=sent;inputs.forEach(input=>input.disabled=sent);}
+document.getElementById("result").scrollIntoView({behavior:"smooth",block:"start"});
+}catch(error){
+status.textContent=error.message||String(error);
+if(submitting){
+const bar=document.getElementById("upload-progress");bar.value=0;
+document.getElementById("progress-label").textContent="Envío no confirmado";
+document.getElementById("progress-detail").textContent="Conserva esta página y tus fotos. Puedes reintentar con el mismo botón.";
+}
+}finally{submitting=false;button.disabled=sent;input.disabled=sent;}
 }
 
 function showResults(){
@@ -499,7 +571,7 @@ border-radius:8px;
 });
 
 document.getElementById("result").innerHTML=html;
-MathJax.typesetPromise();
+if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(console.error);
 
 const resumenPreguntas = questions.map((q, index) => {
     return {
