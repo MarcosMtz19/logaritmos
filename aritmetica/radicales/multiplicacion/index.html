@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title id="page-title"></title>
+
+
+<script id="MathJax-script" async
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style>
+body{
+    background:#ccffcc;
+    font-size:18px;
+}
+#quiz-container{
+    width:95%;
+    max-width:1200px;
+    margin:auto;
+    text-align:center;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    display:none;
+}
+.question-container,.option-container{
+    background:#f0f0f0;
+    border:1px solid #ddd;
+    margin:10px 0;
+    padding:16px;
+    border-radius:5px;
+}
+#options{
+    padding-left:0;
+}
+#options li{
+    list-style:none;
+    margin:5px 0;
+    padding:15px;
+    background:#e9ffe9;
+    cursor:pointer;
+    border-radius:5px;
+}
+#options li:hover{
+    background:#d0ffd0;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+#question-number{
+    font-size:20px;
+    margin-bottom:10px;
+}
+.warning-box{
+    width:80%;
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+    background:#fff3cd;
+    border:2px solid #ffcc00;
+    border-radius:8px;
+    color:#664d03;
+    font-size:20px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="start-container" style="text-align:center;margin-top:50px;">
+
+<h1 id="test-title-heading"></h1>
+
+<div class="warning-box">
+    <strong>Advertencia:</strong> En caso de cambiar de pestaña, cerrar navegador o cambiar de aplicación se cancelará el avance y se reiniciará el test.
+</div>
+
+<h2>Ingresa tu primer nombre y primer apellido</h2>
+
+<input 
+    type="text" 
+    id="student-name" 
+    placeholder="Ejemplo: JUAN PEREZ" 
+    style="padding:10px;font-size:18px;text-transform:uppercase;"
+    oninput="
+        this.value = this.value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^A-Za-z\s]/g, '')
+            .toUpperCase();
+    "
+>
+<br><br>
+<button onclick="startQuiz()">Comenzar Test</button>
+</div>
+
+<div id="quiz-container">
+<div id="question-number"></div>
+<div class="question-container" id="question"></div>
+<div id="question-image"></div>
+<ul id="options"></ul>
+<button id="next-question" onclick="loadNextQuestion()">Siguiente</button>
+<button id="finish-test" onclick="finishTest()">Terminar Test</button>
+</div>
+
+<section id="evidence" style="display:none;max-width:950px;margin:20px auto;background:white;padding:20px;">
+<h2>Adjunta tus procedimientos</h2>
+<p>Adjunta de 1 a 5 fotos en total con los procedimientos de todos los ejercicios. Puedes incluir varios ejercicios en una misma foto. Formatos: JPG, PNG o WEBP; máximo 5 MB por foto y 20 MB en total.</p>
+<p>Ahora puedes abrir tu cámara o galería sin que se reinicie el test.</p>
+<div id="photo-fields"></div>
+<button id="send-evidence" onclick="sendEvidence()">Enviar test y procedimientos</button>
+<div id="upload-progress-panel" hidden style="margin-top:20px;padding:18px;background:#f1f8f4;border-radius:10px;">
+<label for="upload-progress" id="progress-label" style="display:block;font-weight:bold;margin-bottom:8px;">Preparando fotos: 0 %</label>
+<progress id="upload-progress" max="100" value="0" style="width:100%;height:26px;accent-color:#218c52;"></progress>
+<p id="progress-detail" style="margin-bottom:0;"></p>
+</div>
+<p id="upload-status" role="status" aria-live="polite"></p>
+</section>
+<div id="result"></div>
+
+<script>
+
+let studentName="";
+let currentQuestionIndex=0;
+let score=0;
+let testStarted=false;
+let submitting=false;
+let sent=false;
+const deliveryId=crypto.randomUUID();
+
+const testTitle = "Multiplicación de radicales";
+
+document.title = testTitle;
+document.getElementById("test-title-heading").textContent = testTitle;
+const allQuestions = [
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{8}\\cdot\\sqrt{2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(4\\)",
+            "\\(\\sqrt{10}\\)",
+            "\\(8\\)"
+        ],
+        respuestaCorrecta: "\\(4\\)",
+        formula: "\\(\\sqrt[n]{a}\\cdot\\sqrt[n]{b}=\\sqrt[n]{ab}\\)",
+        explicacion: "Como ambos radicales tienen índice \\(2\\), multiplicamos sus radicandos: \\(\\sqrt{8}\\cdot\\sqrt{2}=\\sqrt{8\\cdot2}=\\sqrt{16}\\). Calculamos la raíz cuadrada: \\(\\boxed{4}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt[3]{5}\\cdot\\sqrt[3]{25}\\)",
+        imagen: "",
+        opciones: [
+            "\\(25\\)",
+            "\\(5\\)",
+            "\\(\\sqrt[3]{30}\\)"
+        ],
+        respuestaCorrecta: "\\(5\\)",
+        formula: "\\(\\sqrt[n]{a}\\cdot\\sqrt[n]{b}=\\sqrt[n]{ab}\\)",
+        explicacion: "Ambos radicales tienen índice \\(3\\). Multiplicamos los radicandos: \\(\\sqrt[3]{5}\\cdot\\sqrt[3]{25}=\\sqrt[3]{125}\\). Como \\(125=5^3\\), obtenemos \\(\\boxed{5}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{7}\\cdot\\sqrt{3}\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\sqrt{10}\\)",
+            "\\(21\\)",
+            "\\(\\sqrt{21}\\)"
+        ],
+        respuestaCorrecta: "\\(\\sqrt{21}\\)",
+        formula: "\\(\\sqrt[n]{a}\\cdot\\sqrt[n]{b}=\\sqrt[n]{ab}\\)",
+        explicacion: "Multiplicamos los radicandos y conservamos el índice: \\(\\sqrt{7}\\cdot\\sqrt{3}=\\sqrt{7\\cdot3}=\\sqrt{21}\\). Como \\(21=3\\cdot7\\) no contiene factores cuadrados mayores que uno, el resultado simplificado es \\(\\boxed{\\sqrt{21}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{3}\\cdot\\sqrt{21}\\)",
+        imagen: "",
+        opciones: [
+            "\\(3\\sqrt{7}\\)",
+            "\\(7\\sqrt{3}\\)",
+            "\\(\\sqrt{24}\\)"
+        ],
+        respuestaCorrecta: "\\(3\\sqrt{7}\\)",
+        formula: "\\(\\sqrt{a}\\cdot\\sqrt{b}=\\sqrt{ab};\\qquad \\sqrt{c^2d}=c\\sqrt{d},\\quad a,b,c,d\\geq0\\)",
+        explicacion: "Multiplicamos: \\(\\sqrt{3}\\cdot\\sqrt{21}=\\sqrt{63}\\). Descomponemos \\(63=9\\cdot7\\). Extraemos el cuadrado perfecto: \\(\\sqrt{63}=\\sqrt{9}\\sqrt{7}=\\boxed{3\\sqrt{7}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{15}\\cdot\\sqrt{12}\\)",
+        imagen: "",
+        opciones: [
+            "\\(3\\sqrt{5}\\)",
+            "\\(6\\sqrt{5}\\)",
+            "\\(6\\sqrt{3}\\)"
+        ],
+        respuestaCorrecta: "\\(6\\sqrt{5}\\)",
+        formula: "\\(\\sqrt{a}\\cdot\\sqrt{b}=\\sqrt{ab};\\qquad \\sqrt{c^2d}=c\\sqrt{d},\\quad a,b,c,d\\geq0\\)",
+        explicacion: "Multiplicamos los radicandos: \\(\\sqrt{15}\\cdot\\sqrt{12}=\\sqrt{180}\\). Identificamos el cuadrado perfecto \\(36\\): \\(180=36\\cdot5\\). Entonces \\(\\sqrt{180}=\\sqrt{36}\\sqrt{5}=\\boxed{6\\sqrt{5}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{24}\\cdot\\sqrt{3}\\cdot\\sqrt{6}\\)",
+        imagen: "",
+        opciones: [
+            "\\(6\\sqrt{3}\\)",
+            "\\(12\\sqrt{2}\\)",
+            "\\(12\\sqrt{3}\\)"
+        ],
+        respuestaCorrecta: "\\(12\\sqrt{3}\\)",
+        formula: "\\(\\sqrt{a}\\cdot\\sqrt{b}\\cdot\\sqrt{c}=\\sqrt{abc},\\quad a,b,c\\geq0\\)",
+        explicacion: "Los tres radicales tienen índice \\(2\\), así que multiplicamos sus radicandos: \\(\\sqrt{24\\cdot3\\cdot6}=\\sqrt{432}\\). Descomponemos \\(432=144\\cdot3\\). Extraemos la raíz cuadrada de \\(144\\): \\(\\sqrt{432}=12\\sqrt{3}\\). Resultado: \\(\\boxed{12\\sqrt{3}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{2}\\cdot\\sqrt{6}\\cdot\\sqrt{8}\\)",
+        imagen: "",
+        opciones: [
+            "\\(4\\sqrt{6}\\)",
+            "\\(8\\sqrt{3}\\)",
+            "\\(2\\sqrt{6}\\)"
+        ],
+        respuestaCorrecta: "\\(4\\sqrt{6}\\)",
+        formula: "\\(\\sqrt{a}\\cdot\\sqrt{b}\\cdot\\sqrt{c}=\\sqrt{abc},\\quad a,b,c\\geq0\\)",
+        explicacion: "Multiplicamos los radicandos: \\(\\sqrt{2}\\cdot\\sqrt{6}\\cdot\\sqrt{8}=\\sqrt{96}\\). Descomponemos \\(96=16\\cdot6\\). Por tanto, \\(\\sqrt{96}=\\sqrt{16}\\sqrt{6}=\\boxed{4\\sqrt{6}}\\). ✓"
+    },
+      {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt[3]{5}\\cdot\\sqrt{3}\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\sqrt[6]{675}\\)",
+            "\\(\\sqrt[5]{15}\\)",
+            "\\(\\sqrt[6]{15}\\)"
+        ],
+        respuestaCorrecta: "\\(\\sqrt[6]{675}\\)",
+        formula: "\\(L=\\operatorname{mcm}(m,n);\\qquad \\sqrt[m]{a}\\sqrt[n]{b}=\\sqrt[L]{a^{L/m}b^{L/n}}\\)",
+        explicacion: "Calculamos el índice común: \\(\\operatorname{mcm}(3,2)=6\\). Convertimos cada radical: \\(\\sqrt[3]{5}=\\sqrt[6]{5^2}\\) y \\(\\sqrt{3}=\\sqrt[6]{3^3}\\). Multiplicamos los radicandos: \\(\\sqrt[6]{25\\cdot27}=\\boxed{\\sqrt[6]{675}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt[4]{4}\\cdot\\sqrt{2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\sqrt{2}\\)",
+            "\\(2\\)",
+            "\\(4\\)"
+        ],
+        respuestaCorrecta: "\\(2\\)",
+        formula: "\\(\\sqrt[n]{a}=a^{1/n};\\qquad (a^r)^s=a^{rs};\\qquad a^r a^s=a^{r+s}\\)",
+        explicacion: "Escribimos \\(4=2^2\\). Entonces \\(\\sqrt[4]{4}=(2^2)^{1/4}=2^{1/2}\\). Multiplicamos: \\(2^{1/2}\\cdot2^{1/2}=2^{1}=\\boxed{2}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt[5]{96}\\cdot\\sqrt[3]{3}\\)",
+        imagen: "",
+        opciones: [
+            "\\(2\\sqrt[15]{81}\\)",
+            "\\(\\sqrt[15]{6561}\\)",
+            "\\(2\\sqrt[15]{6561}\\)"
+        ],
+        respuestaCorrecta: "\\(2\\sqrt[15]{6561}\\)",
+        formula: "\\(\\sqrt[n]{a^nb}=a\\sqrt[n]{b};\\qquad L=\\operatorname{mcm}(m,n)\\)",
+        explicacion: "Descomponemos \\(96=2^5\\cdot3\\), por lo que \\(\\sqrt[5]{96}=2\\sqrt[5]{3}\\). El índice común de los radicales restantes es \\(\\operatorname{mcm}(5,3)=15\\). Así, \\(2\\sqrt[5]{3}\\sqrt[3]{3}=2\\sqrt[15]{3^3\\cdot3^5}=2\\sqrt[15]{3^8}\\). Como \\(3^8=6561\\), obtenemos \\(\\boxed{2\\sqrt[15]{6561}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt{2}\\cdot\\sqrt[3]{2}\\cdot\\sqrt[4]{2}\\)",
+        imagen: "",
+        opciones: [
+            "\\(2\\sqrt[12]{2}\\)",
+            "\\(\\sqrt[12]{2}\\)",
+            "\\(2\\sqrt[6]{2}\\)"
+        ],
+        respuestaCorrecta: "\\(2\\sqrt[12]{2}\\)",
+        formula: "\\(\\sqrt[n]{a}=a^{1/n};\\qquad a^r a^s=a^{r+s}\\)",
+        explicacion: "Expresamos los radicales como potencias: \\(2^{1/2}\\cdot2^{1/3}\\cdot2^{1/4}=2^{1/2+1/3+1/4}\\). Usamos denominador común \\(12\\): \\(\\dfrac{6}{12}+\\dfrac{4}{12}+\\dfrac{3}{12}=\\dfrac{13}{12}\\). Entonces \\(2^{13/12}=2^{1+1/12}=\\boxed{2\\sqrt[12]{2}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt[3]{54}\\cdot\\sqrt{2}\\cdot\\sqrt[4]{4}\\)",
+        imagen: "",
+        opciones: [
+            "\\(3\\sqrt[3]{2}\\)",
+            "\\(6\\sqrt[3]{2}\\)",
+            "\\(6\\sqrt[4]{2}\\)"
+        ],
+        respuestaCorrecta: "\\(6\\sqrt[3]{2}\\)",
+        formula: "\\(\\sqrt[n]{a^nb}=a\\sqrt[n]{b};\\qquad \\sqrt[n]{a}=a^{1/n}\\)",
+        explicacion: "Primero simplificamos \\(\\sqrt[3]{54}=\\sqrt[3]{27\\cdot2}=3\\sqrt[3]{2}\\). Además, \\(\\sqrt[4]{4}=2^{2/4}=\\sqrt{2}\\). Por tanto, la expresión queda \\(3\\sqrt[3]{2}\\cdot\\sqrt{2}\\cdot\\sqrt{2}=3\\sqrt[3]{2}\\cdot2\\). Resultado: \\(\\boxed{6\\sqrt[3]{2}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\sqrt[6]{6}\\cdot\\sqrt[3]{2}\\cdot\\sqrt{6}\\)",
+        imagen: "",
+        opciones: [
+            "\\(2\\sqrt[3]{3}\\)",
+            "\\(6\\sqrt[3]{2}\\)",
+            "\\(2\\sqrt[3]{9}\\)"
+        ],
+        respuestaCorrecta: "\\(2\\sqrt[3]{9}\\)",
+        formula: "\\(L=\\operatorname{mcm}(6,3,2);\\qquad \\sqrt[n]{a}=\\sqrt[L]{a^{L/n}}\\)",
+        explicacion: "El índice común es \\(6\\). Convertimos y multiplicamos: \\(\\sqrt[6]{6}\\cdot\\sqrt[6]{2^2}\\cdot\\sqrt[6]{6^3}=\\sqrt[6]{6^4\\cdot2^2}\\). Como \\(6=2\\cdot3\\), el radicando es \\(2^6\\cdot3^4\\). Extraemos \\(2\\): \\(2\\sqrt[6]{3^4}\\). Reducimos el índice y el exponente entre \\(2\\): \\(\\sqrt[6]{3^4}=\\sqrt[3]{3^2}\\). Resultado: \\(\\boxed{2\\sqrt[3]{9}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\big(\\dfrac{3}{2}\\sqrt{6}\\big)\\big(\\dfrac{2}{6}\\sqrt[6]{12}\\big)\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{1}{2}\\sqrt[6]{2592}\\)",
+            "\\(\\sqrt[6]{2592}\\)",
+            "\\(\\dfrac{1}{2}\\sqrt[6]{72}\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{1}{2}\\sqrt[6]{2592}\\)",
+        formula: "\\((a\\sqrt[m]{u})(b\\sqrt[n]{v})=ab\\sqrt[L]{u^{L/m}v^{L/n}},\\quad L=\\operatorname{mcm}(m,n)\\)",
+        explicacion: "Multiplicamos los coeficientes: \\(\\dfrac{3}{2}\\cdot\\dfrac{2}{6}=\\dfrac{1}{2}\\). El índice común es \\(\\operatorname{mcm}(2,6)=6\\). Convertimos \\(\\sqrt{6}=\\sqrt[6]{6^3}=\\sqrt[6]{216}\\). Multiplicamos los radicales: \\(\\dfrac{1}{2}\\sqrt[6]{216\\cdot12}=\\boxed{\\dfrac{1}{2}\\sqrt[6]{2592}}\\). ✓"
+    },
+    {
+        pregunta: "Multiplica y simplifica: \\(\\big(\\dfrac{1}{2}\\sqrt[6]{6}\\big)\\big(\\dfrac{1}{4}\\sqrt[3]{2}\\big)\\)",
+        imagen: "",
+        opciones: [
+            "\\(\\dfrac{1}{8}\\sqrt[6]{12}\\)",
+            "\\(\\dfrac{1}{8}\\sqrt[6]{24}\\)",
+            "\\(\\dfrac{1}{6}\\sqrt[6]{24}\\)"
+        ],
+        respuestaCorrecta: "\\(\\dfrac{1}{8}\\sqrt[6]{24}\\)",
+        formula: "\\((a\\sqrt[m]{u})(b\\sqrt[n]{v})=ab\\sqrt[L]{u^{L/m}v^{L/n}},\\quad L=\\operatorname{mcm}(m,n)\\)",
+        explicacion: "Multiplicamos los coeficientes exteriores: \\(\\dfrac{1}{2}\\cdot\\dfrac{1}{4}=\\dfrac{1}{8}\\). El índice común es \\(\\operatorname{mcm}(6,3)=6\\). Convertimos \\(\\sqrt[3]{2}=\\sqrt[6]{2^2}=\\sqrt[6]{4}\\). Entonces \\(\\dfrac{1}{8}\\sqrt[6]{6}\\cdot\\sqrt[6]{4}=\\boxed{\\dfrac{1}{8}\\sqrt[6]{24}}\\). ✓"
+    }
+
+];
+
+const questions=[...allQuestions]
+.sort(()=>0.5-Math.random())
+.slice(0,4);
+
+questions.forEach(q=>{
+q.selectedAnswer=null;
+q.opciones=[...q.opciones].sort(()=>0.5-Math.random());
+});
+
+function startQuiz(){
+const name=document.getElementById("student-name").value.trim();
+if(name===""){alert("Escribe tu nombre");return;}
+studentName=name;
+testStarted=true;
+document.getElementById("start-container").style.display="none";
+document.getElementById("quiz-container").style.display="block";
+loadQuestion(currentQuestionIndex);
+}
+
+function loadQuestion(index){
+
+const question=questions[index];
+document.getElementById("question").innerHTML=question.pregunta;
+document.getElementById("question-image").innerHTML="";
+
+if(question.imagen){
+const img=document.createElement("img");
+img.src=question.imagen;
+img.style.maxWidth="100%";
+document.getElementById("question-image").appendChild(img);
+}
+
+document.getElementById("question-number").innerHTML=
+`Pregunta ${index+1} de ${questions.length}`;
+
+const optionsContainer=document.getElementById("options");
+optionsContainer.innerHTML="";
+
+question.opciones.forEach(option=>{
+const li=document.createElement("li");
+li.innerHTML=option;
+
+li.onclick=()=>{
+// Guardamos la última respuesta seleccionada.
+question.selectedAnswer=option;
+
+// Quitamos el resaltado anterior para marcar solo la opción actual.
+optionsContainer.querySelectorAll("li").forEach(item=>{
+item.style.backgroundColor="";
+});
+li.style.backgroundColor="#66cc66";
+
+document.getElementById("next-question").style.display=
+index<questions.length-1?"inline-block":"none";
+
+document.getElementById("finish-test").style.display=
+index===questions.length-1?"inline-block":"none";
+};
+
+optionsContainer.appendChild(li);
+});
+
+document.getElementById("next-question").style.display="none";
+document.getElementById("finish-test").style.display="none";
+
+if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(console.error);
+}
+
+function loadNextQuestion(){
+currentQuestionIndex++;
+loadQuestion(currentQuestionIndex);
+}
+
+function finishTest(){
+if(questions.some(q=>q.selectedAnswer===null)){
+alert("Responde todas las preguntas antes de terminar.");return;
+}
+testStarted=false;
+document.getElementById("quiz-container").style.display="none";
+document.getElementById("evidence").style.display="block";
+const fields=document.getElementById("photo-fields");
+fields.innerHTML="";
+const box=document.createElement("div");
+box.className="question-container";
+box.innerHTML=`<h3>Procedimientos de todos los ejercicios</h3>
+<label for="photos-general">Selecciona de 1 a 5 fotos en total:</label>
+<input id="photos-general" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+<p id="photo-names" role="status" aria-live="polite"></p>`;
+fields.appendChild(box);
+box.querySelector("input").addEventListener("change",event=>{
+const files=Array.from(event.target.files);
+document.getElementById("photo-names").textContent=
+files.length>5 ? "Seleccionaste "+files.length+" fotos. Selecciona nuevamente un máximo de 5." :
+files.length+" foto(s): "+files.map(f=>f.name).join(", ");
+});
+
+if(window.MathJax && MathJax.typesetPromise) if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(console.error);
+}
+
+// El HTML puede abrirse directamente desde el equipo.
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby9loPD8VovRCRaIQCsfzMMZlr1F1oPurDFmwu6q9dcdfEuc7w22awIr1VsqXcGkZ_P/exec";
+function sendToScript(payload){
+return new Promise((resolve,reject)=>{
+const token=crypto.randomUUID();
+const frame=document.createElement("iframe");
+frame.name="cvc_"+token.replace(/-/g,"");
+frame.style.display="none";
+frame.title="Confirmación del envío";
+const form=document.createElement("form");
+form.method="POST";form.action=SCRIPT_URL;form.target=frame.name;
+form.enctype="application/x-www-form-urlencoded";form.style.display="none";
+for(const [name,value] of Object.entries({payload:JSON.stringify(payload),token})){
+const input=document.createElement("input");input.type="hidden";input.name=name;input.value=value;form.appendChild(input);
+}
+function clean(){clearTimeout(timer);window.removeEventListener("message",receive);form.remove();frame.remove();}
+function receive(event){
+const data=event.data;
+if(!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)*googleusercontent\.com)$/.test(event.origin))return;
+if(!data||data.channel!=="CVC_ENTREGA"||data.token!==token)return;
+clean();data.ok?resolve(data):reject(new Error(data.error||"No se pudo guardar la entrega."));
+}
+const timer=setTimeout(()=>{clean();reject(new Error("No se recibió confirmación. Conserva esta página abierta y reintenta con el mismo botón. Comprueba que la implementación permita acceso a cualquier persona y que el navegador no bloquee el envío. Si ya se guardó, el reintento reutiliza la misma entrega."));},240000);
+window.addEventListener("message",receive);
+document.body.append(frame,form);form.submit();
+});
+}
+
+function readPhoto(file){
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onload=()=>resolve(String(reader.result).split(",")[1]);
+reader.onerror=()=>reject(new Error("No se pudo leer "+file.name));
+reader.readAsDataURL(file);
+});
+}
+
+function showUploadProgress(value, label, detail){
+const panel=document.getElementById("upload-progress-panel");
+const bar=document.getElementById("upload-progress");
+panel.hidden=false;
+if(value===null)bar.removeAttribute("value");
+else bar.value=value;
+document.getElementById("progress-label").textContent=label;
+document.getElementById("progress-detail").textContent=detail||"";
+}
+
+const photoCache=new WeakMap();
+function photoBlobAsDataURL(blob){
+return new Promise((resolve,reject)=>{
+const r=new FileReader();
+r.onload=()=>resolve(String(r.result));
+r.onerror=()=>reject(new Error("No se pudo leer una foto."));
+r.readAsDataURL(blob);
+});
+}
+
+async function optimizePhoto(file){
+if(photoCache.has(file))return photoCache.get(file);
+let selected=file;
+// Mantiene hasta 2600 píxeles en el lado mayor para conservar la escritura.
+if(file.size>350*1024){
+const url=URL.createObjectURL(file);
+try{
+const image=await new Promise((resolve,reject)=>{
+const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("Imagen no compatible"));img.src=url;
+});
+const scale=Math.min(1,2600/Math.max(image.naturalWidth,image.naturalHeight));
+const canvas=document.createElement("canvas");
+canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+const ctx=canvas.getContext("2d");
+if(!ctx)throw new Error("No se pudo preparar la imagen");
+ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.drawImage(image,0,0,canvas.width,canvas.height);
+const compressed=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.88));
+if(compressed && compressed.size<file.size)selected=compressed;
+canvas.width=canvas.height=1;
+}catch(error){console.warn("Se conserva la foto original:",error);}
+finally{URL.revokeObjectURL(url);}
+}
+const dataURL=await photoBlobAsDataURL(selected);
+const result={nombre:file.name,tipo:selected.type,base64:dataURL.slice(dataURL.indexOf(",")+1),bytes:selected.size};
+photoCache.set(file,result);
+return result;
+}
+
+async function sendEvidence(){
+if(submitting||sent)return;
+const status=document.getElementById("upload-status");
+const button=document.getElementById("send-evidence");
+const input=document.getElementById("photos-general");
+try{
+const files=Array.from(input.files);
+if(files.length<1||files.length>5)throw new Error("Adjunta entre 1 y 5 fotos en total.");
+let originalBytes=0;
+for(const f of files){
+if(!["image/jpeg","image/png","image/webp"].includes(f.type))throw new Error("Usa JPG, PNG o WEBP. Convierte HEIC a JPG.");
+if(!f.size||f.size>5*1024*1024)throw new Error("Cada foto debe pesar entre 1 byte y 5 MB.");
+originalBytes+=f.size;
+}
+if(originalBytes>20*1024*1024)throw new Error("Las fotos superan 20 MB en total.");
+submitting=true;button.disabled=true;input.disabled=true;
+status.textContent="Preparando tus fotos…";
+showUploadProgress(0,"Preparación de fotos: 0 %","Optimizando las imágenes antes de enviarlas.");
+const fotos=[];
+let optimizedBytes=0;
+for(let i=0;i<files.length;i++){
+const photo=await optimizePhoto(files[i]);
+optimizedBytes+=photo.bytes;
+fotos.push({nombre:photo.nombre,tipo:photo.tipo,base64:photo.base64});
+const percent=Math.round((i+1)/files.length*100);
+showUploadProgress(Math.round(percent*0.3),"Preparación de fotos: "+percent+" % de esta etapa","Foto "+(i+1)+" de "+files.length+" preparada. La barra completa se llenará cuando se confirme el guardado.");
+}
+const payload={entregaId:deliveryId,titulo:testTitle,nombre:studentName,fotos,
+preguntas:questions.map((q,i)=>({numero:i+1,pregunta:q.pregunta,imagen:q.imagen||"",
+respuestaSeleccionada:q.selectedAnswer,respuestaCorrecta:q.respuestaCorrecta,
+formula:q.formula||"N/A",explicacion:q.explicacion||"",
+resultado:q.selectedAnswer===q.respuestaCorrecta?"Correcta":"Incorrecta"}))};
+const ahorro=Math.max(0,Math.round((1-optimizedBytes/originalBytes)*100));
+showUploadProgress(null,"Enviando y guardando…", "Fotos: "+(optimizedBytes/1024/1024).toFixed(2)+" MB"+(ahorro?" ("+ahorro+" % menos peso). ":". ")+"Esperando confirmación de Drive, registro y reporte. Mantén esta página abierta.");
+status.textContent="El envío y procesamiento no informan un porcentaje exacto. La barra seguirá en movimiento hasta recibir la confirmación.";
+const reply=await sendToScript(payload);
+if(!reply||!reply.ok)throw new Error("No se confirmó el guardado. Intenta enviar otra vez.");
+sent=true;
+showUploadProgress(100,"100 % — Entrega confirmada","Mostrando tu puntaje y las respuestas…");
+status.textContent="Entrega guardada correctamente.";
+// Breve pausa visual, solo después de recibir la confirmación del servidor.
+await new Promise(resolve=>setTimeout(resolve,650));
+document.getElementById("evidence").style.display="none";
+showResults();
+const message=document.createElement("p");
+message.textContent=reply.aviso||"100 % — Test y procedimientos guardados correctamente.";
+document.getElementById("result").prepend(message);
+document.getElementById("result").scrollIntoView({behavior:"smooth",block:"start"});
+}catch(error){
+status.textContent=error.message||String(error);
+if(submitting){
+const bar=document.getElementById("upload-progress");bar.value=0;
+document.getElementById("progress-label").textContent="Envío no confirmado";
+document.getElementById("progress-detail").textContent="Conserva esta página y tus fotos. Puedes reintentar con el mismo botón.";
+}
+}finally{submitting=false;button.disabled=sent;input.disabled=sent;}
+}
+
+function showResults(){
+
+score=0;
+
+questions.forEach(q=>{
+if(q.selectedAnswer===q.respuestaCorrecta){
+score++;
+}
+});
+
+const total=questions.length;
+const errores=total-score;
+const porcentaje=((score/total)*100).toFixed(2);
+
+document.getElementById("quiz-container").style.display="none";
+
+let html=`<h2>Resultado</h2>
+<p>${studentName}, obtuviste <strong>${score}</strong> de ${total} (${porcentaje}%).</p>
+<h3>Revisión:</h3>`;
+
+questions.forEach(q=>{
+
+let correcta=q.selectedAnswer===q.respuestaCorrecta;
+let fondo=correcta?"#d4edda":"#f8d7da";
+let borde=correcta?"#28a745":"#dc3545";
+let icono=correcta?"✔ Correcta":"✘ Incorrecta";
+
+html+=`
+<div style="
+background:${fondo};
+border:2px solid ${borde};
+margin:12px 0;
+padding:16px;
+border-radius:8px;
+">
+<strong>${icono}</strong><br><br>
+<strong>Pregunta:</strong> ${q.pregunta}<br>
+<strong>Tu respuesta:</strong> ${q.selectedAnswer || "No respondida"}<br>
+<strong>Respuesta correcta:</strong> ${q.respuestaCorrecta}<br><br>
+<strong>Explicación:</strong> ${q.explicacion}
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
+if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(console.error);
+
+const resumenPreguntas = questions.map((q, index) => {
+    return {
+        numero: index + 1,
+        pregunta: q.pregunta,
+        imagen: q.imagen || "",
+        respuestaSeleccionada: q.selectedAnswer || "No respondida",
+        respuestaCorrecta: q.respuestaCorrecta,
+        formula: q.formula || "N/A",
+        explicacion: q.explicacion || "N/A",
+        resultado: q.selectedAnswer === q.respuestaCorrecta ? "Correcta" : "Incorrecta"
+    };
+});
+
+
+}
+
+document.addEventListener("visibilitychange", function(){
+    if(document.hidden && testStarted){
+        location.reload();
+    }
+});
+
+</script>
+</body>
+</html>
