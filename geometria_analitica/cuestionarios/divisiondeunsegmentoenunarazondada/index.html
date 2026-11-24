@@ -138,84 +138,6 @@ document.title = testTitle;
 document.getElementById("test-title-heading").textContent = testTitle;
 const allQuestions = [
   {
-    pregunta: "Determina la razón \\(r\\) en que \\(P(2,0)\\) divide al segmento de extremos \\(P_1(0,2)\\) y \\(P_2(-2,4)\\).",
-    imagen: "",
-    opciones: [
-      "\\(\\frac{1}{2}\\)",
-      "\\(-\\frac{1}{2}\\)",
-      "\\(-2\\)",
-      "\\(2\\)"
-    ],
-    respuestaCorrecta: 1,
-    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
-    explicacion: "Sustituimos las abscisas. \\(r=\\frac{2-0}{-2-2}=\\frac{2}{-4}=-\\frac{1}{2}\\)."
-  },
-  {
-    pregunta: "Determina la razón \\(r\\) en que \\(P(3,0)\\) divide al segmento de extremos \\(P_1(-1,4)\\) y \\(P_2(0,3)\\).",
-    imagen: "",
-    opciones: [
-      "\\(-\\frac{3}{4}\\)",
-      "\\(\\frac{4}{3}\\)",
-      "\\(\\frac{3}{4}\\)",
-      "\\(-\\frac{4}{3}\\)"
-    ],
-    respuestaCorrecta: 3,
-    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
-    explicacion: "Sustituimos las abscisas. \\(r=\\frac{3-(-1)}{0-3}=\\frac{4}{-3}=-\\frac{4}{3}\\)."
-  },
-  {
-    pregunta: "Determina la razón \\(r\\) en que \\(P(2,-2)\\) divide al segmento de extremos \\(P_1(3,-4)\\) y \\(P_2(0,2)\\).",
-    imagen: "",
-    opciones: [
-      "\\(\\frac{1}{2}\\)",
-      "\\(-\\frac{1}{2}\\)",
-      "\\(2\\)",
-      "\\(\\frac{1}{3}\\)"
-    ],
-    respuestaCorrecta: 0,
-    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
-    explicacion: "Sustituimos las abscisas. \\(r=\\frac{2-3}{0-2}=\\frac{-1}{-2}=\\frac{1}{2}\\)."
-  },
-  {
-    pregunta: "Determina la razón \\(r\\) en que \\(P(-5,3)\\) divide al segmento de extremos \\(P_1(3,5)\\) y \\(P_2(-1,4)\\).",
-    imagen: "",
-    opciones: [
-      "\\(2\\)",
-      "\\(-\\frac{1}{2}\\)",
-      "\\(-2\\)",
-      "\\(\\frac{1}{2}\\)"
-    ],
-    respuestaCorrecta: 2,
-    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
-    explicacion: "Sustituimos las abscisas. \\(r=\\frac{-5-3}{-1-(-5)}=\\frac{-8}{4}=-2\\)."
-  },
-  {
-    pregunta: "Determina la razón \\(r\\) en que \\(P(\\frac{1}{3},\\frac{13}{18})\\) divide al segmento de extremos \\(P_1(\\frac{1}{2},\\frac{3}{4})\\) y \\(P_2(2,1)\\).",
-    imagen: "",
-    opciones: [
-      "\\(\\frac{1}{10}\\)",
-      "\\(-\\frac{1}{9}\\)",
-      "\\(-\\frac{1}{10}\\)",
-      "\\(-10\\)"
-    ],
-    respuestaCorrecta: 2,
-    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
-    explicacion: "Las diferencias dirigidas son \\(\\frac{1}{3}-\\frac{1}{2}=-\\frac{1}{6}\\) y \\(2-\\frac{1}{3}=\\frac{5}{3}\\). Al dividir obtenemos \\(r=(-\\frac{1}{6})(\\frac{3}{5})=-\\frac{1}{10}\\)."
-  },
-  {
-    pregunta: "Determina la razón \\(r\\) en que \\(P(-3,\\frac{13}{9})\\) divide al segmento de extremos \\(P_1(-5,1)\\) y \\(P_2(4,3)\\).",
-    imagen: "",
-    opciones: [
-      "\\(\\frac{2}{9}\\)",
-      "\\(\\frac{2}{7}\\)",
-      "\\(\\frac{7}{2}\\)",
-      "\\(-\\frac{2}{7}\\)"
-    ],
-    respuestaCorrecta: 1,
-    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
-    explicacion: "Sustituimos las abscisas. \\(r=\\frac{-3-(-5)}{4-(-3)}=\\frac{2}{7}\\)."
-  },
-  {
     pregunta: "Halla las coordenadas de \\(P\\) si \\(P_1(4,1)\\), \\(P_2(5,-2)\\) y \\(r=-2\\).",
     imagen: "",
     opciones: [
@@ -292,8 +214,85 @@ const allQuestions = [
     respuestaCorrecta: 2,
     formula: "\\(P(\\frac{x_1+rx_2}{1+r},\\frac{y_1+ry_2}{1+r})\\)",
     explicacion: "Como \\(r=1\\), \\(P\\) es el punto medio. Promediamos las coordenadas para obtener \\(x=\\frac{a-3a}{2}=-a\\) y \\(y=\\frac{2b+4b}{2}=3b\\)."
+  },
+  {
+    pregunta: "Determina la razón \\(r\\) en que \\(P(2,0)\\) divide al segmento de extremos \\(P_1(0,2)\\) y \\(P_2(-2,4)\\).",
+    imagen: "",
+    opciones: [
+      "\\(\\frac{1}{2}\\)",
+      "\\(-\\frac{1}{2}\\)",
+      "\\(-2\\)",
+      "\\(2\\)"
+    ],
+    respuestaCorrecta: 1,
+    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
+    explicacion: "Sustituimos las abscisas. \\(r=\\frac{2-0}{-2-2}=\\frac{2}{-4}=-\\frac{1}{2}\\)."
+  },
+  {
+    pregunta: "Determina la razón \\(r\\) en que \\(P(3,0)\\) divide al segmento de extremos \\(P_1(-1,4)\\) y \\(P_2(0,3)\\).",
+    imagen: "",
+    opciones: [
+      "\\(-\\frac{3}{4}\\)",
+      "\\(\\frac{4}{3}\\)",
+      "\\(\\frac{3}{4}\\)",
+      "\\(-\\frac{4}{3}\\)"
+    ],
+    respuestaCorrecta: 3,
+    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
+    explicacion: "Sustituimos las abscisas. \\(r=\\frac{3-(-1)}{0-3}=\\frac{4}{-3}=-\\frac{4}{3}\\)."
+  },
+  {
+    pregunta: "Determina la razón \\(r\\) en que \\(P(2,-2)\\) divide al segmento de extremos \\(P_1(3,-4)\\) y \\(P_2(0,2)\\).",
+    imagen: "",
+    opciones: [
+      "\\(\\frac{1}{2}\\)",
+      "\\(-\\frac{1}{2}\\)",
+      "\\(2\\)",
+      "\\(\\frac{1}{3}\\)"
+    ],
+    respuestaCorrecta: 0,
+    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
+    explicacion: "Sustituimos las abscisas. \\(r=\\frac{2-3}{0-2}=\\frac{-1}{-2}=\\frac{1}{2}\\)."
+  },
+  {
+    pregunta: "Determina la razón \\(r\\) en que \\(P(-5,3)\\) divide al segmento de extremos \\(P_1(3,5)\\) y \\(P_2(-1,4)\\).",
+    imagen: "",
+    opciones: [
+      "\\(2\\)",
+      "\\(-\\frac{1}{2}\\)",
+      "\\(-2\\)",
+      "\\(\\frac{1}{2}\\)"
+    ],
+    respuestaCorrecta: 2,
+    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
+    explicacion: "Sustituimos las abscisas. \\(r=\\frac{-5-3}{-1-(-5)}=\\frac{-8}{4}=-2\\)."
+  },
+  {
+    pregunta: "Determina la razón \\(r\\) en que \\(P(\\frac{1}{3},\\frac{13}{18})\\) divide al segmento de extremos \\(P_1(\\frac{1}{2},\\frac{3}{4})\\) y \\(P_2(2,1)\\).",
+    imagen: "",
+    opciones: [
+      "\\(\\frac{1}{10}\\)",
+      "\\(-\\frac{1}{9}\\)",
+      "\\(-\\frac{1}{10}\\)",
+      "\\(-10\\)"
+    ],
+    respuestaCorrecta: 2,
+    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
+    explicacion: "Las diferencias dirigidas son \\(\\frac{1}{3}-\\frac{1}{2}=-\\frac{1}{6}\\) y \\(2-\\frac{1}{3}=\\frac{5}{3}\\). Al dividir obtenemos \\(r=(-\\frac{1}{6})(\\frac{3}{5})=-\\frac{1}{10}\\)."
+  },
+  {
+    pregunta: "Determina la razón \\(r\\) en que \\(P(-3,\\frac{13}{9})\\) divide al segmento de extremos \\(P_1(-5,1)\\) y \\(P_2(4,3)\\).",
+    imagen: "",
+    opciones: [
+      "\\(\\frac{2}{9}\\)",
+      "\\(\\frac{2}{7}\\)",
+      "\\(\\frac{7}{2}\\)",
+      "\\(-\\frac{2}{7}\\)"
+    ],
+    respuestaCorrecta: 1,
+    formula: "\\(r=\\frac{x-x_1}{x_2-x}\\)",
+    explicacion: "Sustituimos las abscisas. \\(r=\\frac{-3-(-5)}{4-(-3)}=\\frac{2}{7}\\)."
   }
-];
 ];
 const questions=[...allQuestions]
 .sort(()=>0.5-Math.random())
