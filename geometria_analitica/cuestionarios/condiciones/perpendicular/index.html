@@ -138,60 +138,64 @@ document.title = testTitle;
 document.getElementById("test-title-heading").textContent = testTitle;
 const allQuestions = [
     {
-        pregunta: "Comprueba si las rectas \\(y=2x-3\\) y \\(4x-2y+8=0\\) son paralelas. ¿Cuál es la conclusión correcta?",
+        pregunta: "Comprueba si las rectas \\(y=3x-2\\) y \\(x+3y-6=0\\) son perpendiculares. ¿Cuál es la justificación correcta?",
         imagen: "",
         opciones: [
-            "Son coincidentes porque tienen la misma pendiente.",
-            "Son paralelas porque tienen la misma pendiente y distintas ordenadas al origen.",
-            "No son paralelas porque tienen distintas ordenadas al origen."
+            "Sí, porque el producto de sus pendientes es \\(-1\\).",
+            "Sí, porque el producto de sus pendientes es \\(1\\).",
+            "No, porque sus pendientes son distintas."
         ],
-        respuestaCorrecta: "Son paralelas porque tienen la misma pendiente y distintas ordenadas al origen.",
-        formula: "\\(y=mx+b,\\quad m_1=m_2,\\quad b_1\\ne b_2\\)",
-        explicacion: "La primera recta tiene pendiente \\(m_1=2\\) y ordenada al origen \\(b_1=-3\\). En la segunda ecuación despejamos \\(y\\) y obtenemos \\(y=2x+4\\). Por lo tanto, \\(m_2=2\\) y \\(b_2=4\\). Las pendientes son iguales y las ordenadas al origen son distintas, así que las rectas son paralelas."
+        respuestaCorrecta: "Sí, porque el producto de sus pendientes es \\(-1\\).",
+        formula: "\\(m_1m_2=-1\\)",
+        explicacion: "La primera recta tiene pendiente \\(m_1=3\\). Despejamos \\(y\\) en la segunda ecuación y obtenemos \\(y=-\\dfrac{1}{3}x+2\\), así que \\(m_2=-\\dfrac{1}{3}\\). Como \\(3(-\\dfrac{1}{3})=-1\\), las rectas son perpendiculares."
     },
     {
-        pregunta: "¿La recta que pasa por \\(A(-2,1)\\) y \\(B(2,3)\\) es paralela a la recta \\(2x+y-5=0\\)?",
+        pregunta: "¿La recta que pasa por \\(A(-2,1)\\) y \\(B(2,3)\\) es perpendicular a la recta \\(3x+y-4=0\\)?",
         imagen: "",
         opciones: [
-            "Sí, porque ambas pendientes son \\(\\dfrac{1}{2}\\).",
-            "No, porque las pendientes son \\(2\\) y \\(-2\\).",
-            "No, porque las pendientes son \\(\\dfrac{1}{2}\\) y \\(-2\\)."
+            "Sí, porque sus pendientes tienen signos opuestos.",
+            "No, porque el producto de sus pendientes es \\(-\\dfrac{3}{2}\\).",
+            "Sí, porque el producto de sus pendientes es \\(-1\\)."
         ],
-        respuestaCorrecta: "No, porque las pendientes son \\(\\dfrac{1}{2}\\) y \\(-2\\).",
-        formula: "\\(m=\\dfrac{y_B-y_A}{x_B-x_A}\\)",
-        explicacion: "Calculamos la pendiente de \\(AB\\) y obtenemos \\(m_1=\\dfrac{3-1}{2-(-2)}=\\dfrac{1}{2}\\). Al despejar \\(y\\) en la segunda ecuación resulta \\(y=-2x+5\\), por lo que \\(m_2=-2\\). Como las pendientes son distintas, las rectas no son paralelas."
+        respuestaCorrecta: "No, porque el producto de sus pendientes es \\(-\\dfrac{3}{2}\\).",
+        formula: "\\(m=\\dfrac{y_B-y_A}{x_B-x_A},\\quad m_1m_2=-1\\)",
+        explicacion: "La pendiente de \\(AB\\) es \\(m_1=\\dfrac{3-1}{2-(-2)}=\\dfrac{1}{2}\\). Al despejar \\(y\\) en la segunda ecuación obtenemos \\(y=-3x+4\\), cuya pendiente es \\(m_2=-3\\). Como \\(m_1m_2=-\\dfrac{3}{2}\\ne-1\\), las rectas no son perpendiculares."
     },
     {
-        pregunta: "Halla, en forma general, la ecuación de la recta paralela a \\(2x-3y+6=0\\) que pasa por \\(P(3,1)\\).",
+        pregunta: "Halla, en forma ordinaria, la ecuación de la recta perpendicular a \\(y=2x-4\\) que pasa por \\(P(4,1)\\).",
         imagen: "",
         opciones: [
-            "\\(2x-3y-3=0\\)",
-            "\\(2x-3y+3=0\\)",
-            "\\(2x+3y-9=0\\)"
+            "\\(y=2x-7\\)",
+            "\\(y=\\dfrac{1}{2}x-1\\)",
+            "\\(y=-\\dfrac{1}{2}x+3\\)"
         ],
-        respuestaCorrecta: "\\(2x-3y-3=0\\)",
-        formula: "\\(Ax+By+K=0,\\quad K=-Ax_0-By_0\\)",
-        explicacion: "Conservamos los coeficientes de \\(x\\) y \\(y\\) para escribir \\(2x-3y+K=0\\). Sustituimos \\(P(3,1)\\) y obtenemos \\(2(3)-3(1)+K=0\\). Al despejar resulta \\(K=-3\\). Por lo tanto, la ecuación es \\(\\boxed{2x-3y-3=0}\\)."
+        respuestaCorrecta: "\\(y=-\\dfrac{1}{2}x+3\\)",
+        formula: "\\(m_\\perp=-\\dfrac{1}{m},\\quad y-y_0=m_\\perp(x-x_0)\\)",
+        explicacion: "La recta dada tiene pendiente \\(m=2\\), así que la pendiente perpendicular es \\(-\\dfrac{1}{2}\\). Sustituimos \\(P(4,1)\\) en la forma punto-pendiente y obtenemos \\(y-1=-\\dfrac{1}{2}(x-4)\\). Distribuimos y sumamos \\(1\\) para obtener \\(\\boxed{y=-\\dfrac{1}{2}x+3}\\)."
     },
     {
-        pregunta: "Halla la ecuación de la recta paralela a \\(x=4\\) que pasa por \\(P(-2,5)\\).",
+        pregunta: "Halla, en forma general, la ecuación de la recta perpendicular a \\(2x-3y+6=0\\) que pasa por \\(P(-2,3)\\).",
         imagen: "",
         opciones: [
-            "\\(y=5\\)",
-            "\\(x=-2\\)",
-            "\\(x=5\\)"
+            "\\(3x+2y=0\\)",
+            "\\(3x-2y+12=0\\)",
+            "\\(2x-3y+13=0\\)"
         ],
-        respuestaCorrecta: "\\(x=-2\\)",
-        formula: "\\(x=x_0\\)",
-        explicacion: "La recta \\(x=4\\) es vertical, por lo que su paralela también tiene la forma \\(x=x_0\\). La abscisa de \\(P(-2,5)\\) es \\(-2\\). Por lo tanto, la ecuación es \\(\\boxed{x=-2}\\)."
+        respuestaCorrecta: "\\(3x+2y=0\\)",
+        formula: "\\(m=-\\dfrac{A}{B},\\quad m_\\perp=-\\dfrac{1}{m},\\quad y-y_0=m_\\perp(x-x_0)\\)",
+        explicacion: "Despejamos \\(y\\) en la ecuación dada y obtenemos \\(y=\\dfrac{2}{3}x+2\\). La pendiente perpendicular es \\(-\\dfrac{3}{2}\\). Sustituimos \\(P(-2,3)\\) y resulta \\(y-3=-\\dfrac{3}{2}(x+2)\\). Multiplicamos por \\(2\\) para obtener \\(2y-6=-3x-6\\). Al reunir los términos queda \\(\\boxed{3x+2y=0}\\)."
     },
     {
-        pregunta: "Calcula la distancia entre las rectas paralelas \\(3x+4y-10=0\\) y \\(6x+8y+30=0\\).",
+        pregunta: "Halla la ecuación de la recta perpendicular a \\(y=-3\\) que pasa por \\(P(5,-2)\\).",
         imagen: "",
-        opciones: ["\\(4\\) unidades", "\\(8\\) unidades", "\\(5\\) unidades"],
-        respuestaCorrecta: "\\(5\\) unidades",
-        formula: "\\(d=\\dfrac{|C_2-C_1|}{\\sqrt{A^2+B^2}}\\)",
-        explicacion: "Dividimos la segunda ecuación entre \\(2\\) y obtenemos \\(3x+4y+15=0\\). Ahora ambas ecuaciones tienen los mismos coeficientes \\(A=3\\) y \\(B=4\\). Sustituimos \\(C_1=-10\\) y \\(C_2=15\\) en la fórmula. Resulta \\(d=\\dfrac{|15-(-10)|}{\\sqrt{3^2+4^2}}=\\dfrac{25}{5}=\\boxed{5}\\) unidades."
+        opciones: [
+            "\\(y=-2\\)",
+            "\\(x=5\\)",
+            "\\(x=-2\\)"
+        ],
+        respuestaCorrecta: "\\(x=5\\)",
+        formula: "\\(y=k\\quad\\text{(horizontal)},\\qquad x=x_0\\quad\\text{(vertical)}\\)",
+        explicacion: "La recta \\(y=-3\\) es horizontal, así que su perpendicular es vertical. Una recta vertical que pasa por \\(P(5,-2)\\) tiene abscisa constante \\(5\\). Por lo tanto, su ecuación es \\(\\boxed{x=5}\\)."
     }
 ];
 const questions=[...allQuestions]
